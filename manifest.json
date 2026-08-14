@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-quiznow",
+	"name": "QuizNow 快速考试与复习",
+	"version": "1.0.0",
+	"minAppVersion": "1.4.0",
+	"description": "基于当前笔记快速生成考试试题，支持单选/多选/填空/判断题，SM-2 间隔复习与薄弱点管理。",
+	"author": "QuizNow",
+	"authorUrl": "",
+	"isDesktopOnly": false
+}
