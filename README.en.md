@@ -2,6 +2,8 @@
 
 # 🎓 QuizNow — Exam & Review Plugin for Obsidian
 
+![UI](user_interface_imgs/interface_05.png)
+
 **Generate exam questions from your notes in one click · Single / Multiple / Fill-in-the-blank / True-False · SM-2 spaced repetition**
 
 [简体中文](README.md) | [English](README.en.md)

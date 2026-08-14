@@ -2,6 +2,8 @@
 
 # 🎓 QuizNow — Obsidian 快速考试与复习插件
 
+![UI](user_interface_imgs/interface_05.png)
+
 **基于当前笔记一键生成考试试题 · 单选/多选/填空/判断 · SM-2 科学间隔复习**
 
 [简体中文](README.md) | [English](README.en.md)
