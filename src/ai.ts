@@ -1,6 +1,6 @@
 import { requestUrl } from "obsidian";
 import type { Question, QuestionType } from "./types";
-import { newId } from "./question";
+import { newId, cleanOption } from "./question";
 import type { Lang } from "./types";
 import { t, getLang } from "./i18n";
 
@@ -198,7 +198,10 @@ export async function aiGenerateQuestions(
 		if (type === "single" && answer.length > 1) answer = [answer[0]];
 		const options =
 			type === "single" || type === "multiple"
-				? (r.options || []).slice(0, 8)
+				? (r.options || [])
+						.map((o) => cleanOption(String(o)))
+						.filter(Boolean)
+						.slice(0, 8)
 				: undefined;
 		if ((type === "single" || type === "multiple") && (!options || options.length < 2)) continue;
 		if (type === "judge") {

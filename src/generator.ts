@@ -1,5 +1,5 @@
 import type { Question } from "./types";
-import { newId } from "./question";
+import { newId, cleanOption } from "./question";
 import { t } from "./i18n";
 
 /**
@@ -77,9 +77,11 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 	let fillCount = 0;
 	for (const { term, sentence } of uniqueTerms) {
 		if (fillCount >= 6) break;
+		const cleanTerm = cleanOption(term) || term;
 		const blanked = cleanStem(sentence)
 			.replace(/\*\*/g, "")
-			.replace(term, "____");
+			.replace(term, "____")
+			.replace(cleanTerm, "____");
 		if (blanked.length > 160) continue;
 		// 挖空后没有实际题干（如纯标题 "## **术语**"）则跳过
 		if (blanked.replace(/[_\-*\s#]/g, "").length < 2) continue;
@@ -87,7 +89,7 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 			id: newId(),
 			type: "fill",
 			content: blanked,
-			answer: [term],
+			answer: [cleanTerm],
 			explanation: t("gen.heur.bold", { source: sourceName }),
 			source: sourceName,
 			createdAt: now,
@@ -103,7 +105,7 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 			id: newId(),
 			type: "fill",
 			content: `${key}：____`,
-			answer: [value],
+			answer: [cleanOption(value) || value],
 			source: sourceName,
 			createdAt: now,
 		});
@@ -111,19 +113,28 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 	}
 
 	// 5. 加粗术语 -> 单选题（用其它术语做干扰项）
-	const pool = uniqueTerms.map((t) => t.term);
+	const rawPool = uniqueTerms.map((t) => t.term);
+	const cleanPool = rawPool.map((t) => cleanOption(t) || t);
 	let singleCount = 0;
 	for (const { term, sentence } of uniqueTerms) {
 		if (singleCount >= 5) break;
-		const distractors = pool
-			.filter((t) => t !== term && !term.includes(t) && !t.includes(term))
-			.slice(0, 3);
+		const cleanTerm = cleanOption(term) || term;
+		const distractors: string[] = [];
+		for (let i = 0; i < rawPool.length && distractors.length < 3; i++) {
+			const raw = rawPool[i];
+			const clean = cleanPool[i];
+			if (clean === cleanTerm) continue;
+			if (term.includes(raw) || raw.includes(term)) continue; // 避免答案包含干扰项
+			if (distractors.includes(clean)) continue; // 去重（清洗后可能相同）
+			distractors.push(clean);
+		}
 		if (distractors.length < 3) continue;
-		const options = [term, ...distractors].sort(() => Math.random() - 0.5);
-		const answerLetter = String.fromCharCode(65 + options.indexOf(term));
+		const options = [cleanTerm, ...distractors].sort(() => Math.random() - 0.5);
+		const answerLetter = String.fromCharCode(65 + options.indexOf(cleanTerm));
 		const blanked = cleanStem(sentence)
 			.replace(/\*\*/g, "")
-			.replace(term, "____");
+			.replace(term, "____")
+			.replace(cleanTerm, "____");
 		if (blanked.length > 160) continue;
 		// 挖空后没有实际题干则跳过
 		if (blanked.replace(/[_\-*\s#]/g, "").length < 2) continue;
@@ -133,7 +144,7 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 			content: blanked,
 			options,
 			answer: [answerLetter],
-			explanation: t("gen.heur.single", { term, source: sourceName }),
+			explanation: t("gen.heur.single", { term: cleanTerm, source: sourceName }),
 			source: sourceName,
 			createdAt: now,
 		});

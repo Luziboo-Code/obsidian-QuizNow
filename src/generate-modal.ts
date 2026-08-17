@@ -1,7 +1,7 @@
 import { Modal, Notice, type App } from "obsidian";
 import type { QuizNowApi } from "./plugin-api";
 import type { Question } from "./types";
-import { answerText, newId, displayContent } from "./question";
+import { answerText, newId, displayContent, cleanOption } from "./question";
 import { el, btn, badge } from "./ui";
 import { t } from "./i18n";
 
@@ -52,7 +52,7 @@ export class GenerationModal extends Modal {
 			if (q.options && q.options.length > 0) {
 				const opts = el("div", "qn-gen-answer");
 				opts.textContent = q.options
-					.map((o, j) => `${String.fromCharCode(65 + j)}. ${o}`)
+					.map((o, j) => `${String.fromCharCode(65 + j)}. ${cleanOption(o)}`)
 					.join("　");
 				item.appendChild(opts);
 			}

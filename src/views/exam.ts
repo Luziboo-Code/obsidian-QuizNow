@@ -1,7 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { ExamRecord, ExamSession, Question, QuestionType } from "../types";
-import { checkAnswer, answerText, userAnswerText, newId, displayContent, shuffleOptions } from "../question";
+import { checkAnswer, answerText, userAnswerText, newId, displayContent, shuffleOptions, cleanOption } from "../question";
 import { el, clear, btn, badge, field, progressBar, emptyState } from "../ui";
 import { t } from "../i18n";
 
@@ -281,7 +281,7 @@ function buildAnswerControl(
 				const letter = String.fromCharCode(65 + i);
 				const row = el("div", "qn-option");
 				row.appendChild(el("span", "qn-opt-letter", `${letter}.`));
-				row.appendChild(el("span", "", opt));
+				row.appendChild(el("span", "", cleanOption(opt)));
 				row.addEventListener("click", () => {
 					if (state.submitted) return;
 					if (q.type === "single") {

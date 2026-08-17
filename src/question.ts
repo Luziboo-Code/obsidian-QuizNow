@@ -86,7 +86,10 @@ export function parseQuestion(md: string, source?: string): Question | null {
 	for (const line of lines) {
 		const m = line.match(OPTION_RE);
 		if (m && (type === "single" || type === "multiple")) {
-			optionLines.push({ letter: m[1].toUpperCase(), text: m[2].trim() });
+			optionLines.push({
+				letter: m[1].toUpperCase(),
+				text: cleanOption(m[2]),
+			});
 		} else {
 			contentLines.push(line);
 		}
@@ -259,11 +262,21 @@ export function displayContent(content: string): string {
 }
 
 /**
+ * 清洗选项文本：去掉开头的字母编号前缀（"A. 苹果" / "B) 巴黎" / "C、北京" 等），
+ * 避免渲染时出现 "D. A. 苹果" 这类异常。
+ */
+export function cleanOption(text: string): string {
+	return String(text ?? "")
+		.trim()
+		.replace(/^[A-Ha-h][.、.)）:：]\s*/, "")
+		.trim();
+}
+
+/**
  * 打乱选择题选项顺序并重算答案字母（返回新对象，不改动原题）。
  * 用于随机出题时生成选项顺序不同的试卷。
  */
-export function shuffleOptions(q: Question): Question {
-	if (q.type !== "single" && q.type !== "multiple") return q;
+export function shuffleOptions(q: Question): Question {	if (q.type !== "single" && q.type !== "multiple") return q;
 	if (!q.options || q.options.length < 2) return q;
 	const n = q.options.length;
 	const order = Array.from({ length: n }, (_, i) => i);
