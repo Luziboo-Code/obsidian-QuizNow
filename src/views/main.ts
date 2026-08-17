@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import type { QuizNowApi, TabName } from "../plugin-api";
 import { renderHome } from "./home";
-import { renderExam } from "./exam";
+import { renderExam, cleanupExamKeys } from "./exam";
 import { renderReview } from "./review";
 import { renderWeak } from "./weak";
 import { renderSettings } from "./settings";
@@ -90,6 +90,8 @@ export class QuizNowView extends ItemView {
 	render(): void {
 		if (!this.bodyEl) return;
 		clear(this.bodyEl);
+		// 每次渲染前清理上一轮注册的考试快捷键监听
+		cleanupExamKeys();
 		switch (this.tab) {
 			case "home":
 				renderHome(this.bodyEl, this.plugin);

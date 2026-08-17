@@ -2,27 +2,99 @@ import { setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import { el, clear, btn, emptyState } from "../ui";
 import { t } from "../i18n";
+import {
+	ExamHistoryModal,
+	QuestionListModal,
+	questionStatus,
+	type QuestionListItem,
+} from "../list-modal";
+import type { Question } from "../types";
 
 /** 首页：统计 + 各试卷最高分卡片 */
 export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 	clear(container);
 	const s = plugin.store.stats();
 
+	const statRow = el("div", "qn-stats");
+
+	const questions = plugin.store.data.questions;
+	const wrongIds = [...new Set([...plugin.store.data.reviewIds, ...plugin.store.data.weakIds])];
+	const wrongQs = wrongIds
+		.map((id) => questions.find((q) => q.id === id))
+		.filter((q): q is Question => !!q);
+	const reviewQs = plugin.store.data.reviewIds
+		.map((id) => questions.find((q) => q.id === id))
+		.filter((q): q is Question => !!q);
+
 	const stats = [
-		{ label: t("home.stat.questions"), value: s.questionCount, icon: "library" },
-		{ label: t("home.stat.wrong"), value: s.wrongCount, icon: "alert-triangle" },
-		{ label: t("home.stat.review"), value: s.dueReviewCount, icon: "refresh-cw" },
-		{ label: t("home.stat.papers"), value: s.paperCount, icon: "file-text" },
+		{
+			label: t("home.stat.questions"),
+			value: s.questionCount,
+			icon: "library",
+			onClick: () => {
+				const items: QuestionListItem[] = questions.map((q) => ({
+					question: q,
+					status: questionStatus(q, plugin.store.data.sm, plugin.store.data.weakIds, plugin.store.data.reviewIds),
+				}));
+				new QuestionListModal(plugin.app, plugin, t("home.stat.questions"), items).open();
+			},
+		},
+		{
+			label: t("home.stat.wrong"),
+			value: s.wrongCount,
+			icon: "alert-triangle",
+			onClick: () => {
+				const items: QuestionListItem[] = wrongQs.map((q) => ({
+					question: q,
+					status: questionStatus(q, plugin.store.data.sm, plugin.store.data.weakIds, plugin.store.data.reviewIds),
+				}));
+				new QuestionListModal(plugin.app, plugin, t("home.stat.wrong"), items).open();
+			},
+		},
+		{
+			label: t("home.stat.review"),
+			value: s.dueReviewCount,
+			icon: "refresh-cw",
+			onClick: () => {
+				const items: QuestionListItem[] = reviewQs.map((q) => ({
+					question: q,
+					status: questionStatus(q, plugin.store.data.sm, plugin.store.data.weakIds, plugin.store.data.reviewIds),
+				}));
+				new QuestionListModal(plugin.app, plugin, t("home.stat.review"), items).open();
+			},
+		},
+		{
+			label: t("home.stat.papers"),
+			value: s.paperCount,
+			icon: "file-text",
+			onClick: () => {
+				const records = [...plugin.store.data.examRecords]
+					.sort((a, b) => b.date - a.date)
+					.map((r) => ({
+						id: r.id,
+						name: r.name,
+						date: r.date,
+						score: r.score,
+						correct: r.correct,
+						total: r.total,
+						wrongQuestions: r.wrongIds
+							.map((id) => questions.find((q) => q.id === id))
+							.filter((q): q is Question => !!q),
+					}));
+				new ExamHistoryModal(plugin.app, plugin, records).open();
+			},
+		},
 	];
 
-	const statRow = el("div", "qn-stats");
 	for (const item of stats) {
-		const card = el("div", "qn-stat");
+		const card = el("div", "qn-stat clickable");
 		const icon = el("div", "qn-stat-icon");
 		setIcon(icon, item.icon);
 		card.appendChild(icon);
 		card.appendChild(el("div", "qn-stat-value", String(item.value)));
 		card.appendChild(el("div", "qn-stat-label", item.label));
+		card.setAttribute("aria-label", `${item.label}：${item.value}`);
+		card.addEventListener("click", item.onClick);
 		statRow.appendChild(card);
 	}
 	container.appendChild(statRow);

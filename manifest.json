@@ -1,10 +1,10 @@
 {
 	"id": "obsidian-quiznow",
-	"name": "QuizNow 快速考试与复习",
-	"version": "1.0.0",
+	"name": "QuizNow",
+	"version": "1.0.1",
 	"minAppVersion": "1.4.0",
-	"description": "基于当前笔记快速生成考试试题，支持单选/多选/填空/判断题，SM-2 间隔复习与薄弱点管理。",
-	"author": "QuizNow",
+	"description": "Generate exam questions from your notes in one click. Based on current notes, quickly generate exam questions, supporting single choice, multiple choice, fill-in-the-blank, and true/false questions. SM-2 spaced repetition and weak point management.",
+	"author": "Luziboo",
 	"authorUrl": "",
 	"isDesktopOnly": false
 }

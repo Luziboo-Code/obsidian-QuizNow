@@ -1,7 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { Question } from "../types";
-import { newId } from "../question";
+import { newId, displayContent } from "../question";
 import { isDue } from "../sm2";
 import { heuristicExplanation } from "../generator";
 import { aiExplainQuestion } from "../ai";
@@ -68,7 +68,7 @@ function renderWeakItem(plugin: QuizNowApi, q: Question): HTMLElement {
 	const head = el("div", "qn-item-head");
 	head.appendChild(badge(q.type));
 	item.appendChild(head);
-	item.appendChild(el("div", "qn-item-content", q.content));
+	item.appendChild(el("div", "qn-item-content", displayContent(q.content)));
 
 	// 元信息
 	const meta = el("div", "qn-item-meta");

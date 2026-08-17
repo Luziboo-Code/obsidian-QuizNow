@@ -240,3 +240,42 @@ export function userAnswerText(q: Question, userAnswer: string[]): string {
 				: t("answer.none");
 	}
 }
+
+/**
+ * 显示用：去掉题干行首残留的 Markdown 标题/列表/引用标记，
+ * 避免出现 "##____" 等无法阅读的内容（兼容历史题库中的旧题）。
+ */
+export function displayContent(content: string): string {
+	return content
+		.split("\n")
+		.map((l) =>
+			l
+				.replace(/^\s*#{1,6}\s*/, "")
+				.replace(/^\s*[-*+]\s+/, "")
+				.replace(/^\s*>\s*/, "")
+		)
+		.join("\n")
+		.trim();
+}
+
+/**
+ * 打乱选择题选项顺序并重算答案字母（返回新对象，不改动原题）。
+ * 用于随机出题时生成选项顺序不同的试卷。
+ */
+export function shuffleOptions(q: Question): Question {
+	if (q.type !== "single" && q.type !== "multiple") return q;
+	if (!q.options || q.options.length < 2) return q;
+	const n = q.options.length;
+	const order = Array.from({ length: n }, (_, i) => i);
+	for (let i = n - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[order[i], order[j]] = [order[j], order[i]];
+	}
+	const options = order.map((i) => q.options![i]);
+	const answer = q.answer.map((a) => {
+		const oldIdx = a.charCodeAt(0) - 65;
+		const newIdx = order.indexOf(oldIdx);
+		return String.fromCharCode(65 + newIdx);
+	});
+	return { ...q, options, answer };
+}

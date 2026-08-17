@@ -131,6 +131,14 @@ body.theme-dark .qn-view {
 	box-shadow: var(--qn-shadow-hover);
 }
 
+.qn-stat.clickable {
+	cursor: pointer;
+}
+
+.qn-stat.clickable:hover .qn-stat-label {
+	color: var(--qn-accent);
+}
+
 .qn-stat-icon {
 	position: absolute;
 	right: 10px;
@@ -268,6 +276,17 @@ body.theme-dark .qn-view {
 	cursor: not-allowed;
 }
 
+/* 紧凑的图标按钮（如列表中的删除按钮） */
+.qn-icon-btn {
+	padding: 5px 7px;
+	line-height: 1;
+}
+
+.qn-icon-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
 .qn-btn-sm {
 	padding: 6px 14px;
 	font-size: 12px;
@@ -281,6 +300,11 @@ body.theme-dark .qn-view {
 	display: flex;
 	gap: 8px;
 	flex-wrap: wrap;
+}
+
+/* 结果页/完成页的操作按钮与上方内容保持间距 */
+.qn-card > .qn-btn-row {
+	margin-top: 14px;
 }
 
 /* ---------- 表单 ---------- */
@@ -443,6 +467,24 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	margin-bottom: 12px;
 }
 
+/* 题号后的题目来源（灰色小字） */
+.qn-source {
+	font-size: 11px;
+	color: var(--text-faint);
+	max-width: 45%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex-shrink: 1;
+}
+
+/* 快捷键提示（提交后显示在下一题按钮旁） */
+.qn-key-hint {
+	font-size: 11px;
+	color: var(--text-faint);
+	align-self: center;
+}
+
 .qn-question-content {
 	font-size: 15px;
 	line-height: 1.6;
@@ -568,7 +610,8 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 .qn-flashcard {
 	position: relative;
 	width: 100%;
-	min-height: 180px;
+	height: min(340px, 62vh);
+	min-height: 220px;
 	transform-style: preserve-3d;
 	transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
 	cursor: pointer;
@@ -587,12 +630,29 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	box-shadow: var(--qn-shadow);
-	padding: 24px 22px;
+	padding: 20px 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
-	overflow-y: auto;
+	gap: 10px;
 	box-sizing: border-box;
+	overflow: hidden;
+}
+
+/* 面内可滚动内容区（正面题干 / 背面答案与解析） */
+.qn-flash-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/* 背面底部的评级按钮固定可见，不受内容滚动影响 */
+.qn-flash-back .qn-rate-row,
+.qn-flash-back > .qn-divider,
+.qn-flash-back > .qn-note {
+	flex-shrink: 0;
 }
 
 .qn-flash-back {
@@ -609,7 +669,8 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	color: var(--text-muted);
 	text-align: center;
 	margin-top: auto;
-	padding-top: 8px;
+	padding-top: 6px;
+	flex-shrink: 0;
 }
 
 /* ---------- 复习评级按钮 ---------- */

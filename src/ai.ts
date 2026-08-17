@@ -189,8 +189,10 @@ export async function aiGenerateQuestions(
 			r.type === "judge"
 				? r.type
 				: null;
-		const content = (r.content || "").trim();
+		const content = cleanAiContent(r.content);
 		if (!type || !content) continue;
+		// 过滤掉只有占位符/符号、没有实际题干的内容（如 "## ____"）
+		if (content.replace(/[_\-*|#>\s]/g, "").length < 2) continue;
 		let answer = (r.answer || []).map((s) => String(s).trim()).filter(Boolean);
 		if (answer.length === 0) continue;
 		if (type === "single" && answer.length > 1) answer = [answer[0]];
@@ -220,6 +222,23 @@ export async function aiGenerateQuestions(
 		throw new Error(t("ai.parseFail"));
 	}
 	return out;
+}
+
+/** 清洗 AI 生成的题干：去掉行首标题/列表/引用标记，压缩空白 */
+function cleanAiContent(content: unknown): string {
+	const text = String(content ?? "")
+		.split("\n")
+		.map((l) =>
+			l
+				.replace(/^\s*#{1,6}\s*/, "")
+				.replace(/^\s*[-*+]\s+/, "")
+				.replace(/^\s*>\s*/, "")
+				.trim()
+		)
+		.join(" ")
+		.replace(/\s+/g, " ")
+		.trim();
+	return text;
 }
 
 /** 薄弱点讲解的系统提示词（按语言） */

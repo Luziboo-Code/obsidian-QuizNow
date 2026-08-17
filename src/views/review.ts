@@ -1,7 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { Question } from "../types";
-import { answerText } from "../question";
+import { answerText, displayContent } from "../question";
 import { isDue } from "../sm2";
 import { el, clear, btn, badge, emptyState, progressBar } from "../ui";
 import { t } from "../i18n";
@@ -42,7 +42,7 @@ export function renderReview(container: HTMLElement, plugin: QuizNowApi): void {
 				const head = el("div", "qn-item-head");
 				head.appendChild(badge(q.type));
 				item.appendChild(head);
-				item.appendChild(el("div", "qn-item-content", q.content));
+				item.appendChild(el("div", "qn-item-content", displayContent(q.content)));
 				const dueCard = plugin.store.data.sm[q.id];
 				item.appendChild(
 					el(
@@ -116,29 +116,35 @@ function renderFlash(
 	const card = el("div", "qn-flashcard");
 	wrap.appendChild(card);
 
-	// 正面
+	// 正面：题干在可滚动区，提示固定在底部
 	const front = el("div", "qn-flash-face");
+	const frontScroll = el("div", "qn-flash-scroll");
 	const head = el("div", "qn-question-head");
 	head.appendChild(badge(q.type));
-	front.appendChild(head);
-	front.appendChild(el("div", "qn-question-content", q.content));
+	frontScroll.appendChild(head);
+	frontScroll.appendChild(el("div", "qn-question-content", displayContent(q.content)));
+	front.appendChild(frontScroll);
 	front.appendChild(el("div", "qn-flash-hint", t("review.flipHint")));
 	card.appendChild(front);
 
-	// 背面
+	// 背面：答案与解析在可滚动区，评级按钮固定在底部（始终可见）
 	const back = el("div", "qn-flash-face qn-flash-back");
+	const backScroll = el("div", "qn-flash-scroll");
 	const backTitle = el("div", "qn-result-title", t("review.answer"));
-	back.appendChild(backTitle);
-	back.appendChild(el("div", "qn-question-content", answerText(q)));
+	backScroll.appendChild(backTitle);
+	backScroll.appendChild(el("div", "qn-question-content", answerText(q)));
 	if (q.explanation) {
-		back.appendChild(el("div", "qn-explain", q.explanation));
+		backScroll.appendChild(el("div", "qn-explain", q.explanation));
 	}
+	back.appendChild(backScroll);
 	const rateRow = el("div", "qn-rate-row");
 	for (const r of RATES) {
 		const b = el("button", `qn-rate ${r.cls}`);
 		b.appendChild(el("div", "", t(r.labelKey)));
 		b.appendChild(el("div", "qn-rate-sub", t(r.subKey)));
-		b.addEventListener("click", () => {
+		b.addEventListener("click", (e) => {
+			// 阻止冒泡，避免触发卡片翻转竞态
+			e.stopPropagation();
 			void rate(plugin, q, r.grade, () =>
 				renderFlash(container, plugin, list, index + 1)
 			);
@@ -164,10 +170,16 @@ async function rate(
 	grade: number,
 	next: () => void
 ): Promise<void> {
-	const correct = grade >= 3;
-	await plugin.store.markReviewResult(q, correct, grade);
-	if (!correct) {
-		new Notice(t("review.movedWeak", { title: q.content.slice(0, 18) }));
+	try {
+		const correct = grade >= 3;
+		await plugin.store.markReviewResult(q, correct, grade);
+		if (!correct) {
+			new Notice(t("review.movedWeak", { title: q.content.slice(0, 18) }));
+		}
+	} catch (e) {
+		new Notice(String((e as Error).message));
+	} finally {
+		// 无论成功与否都推进到下一张，避免流程卡死
+		next();
 	}
-	next();
 }

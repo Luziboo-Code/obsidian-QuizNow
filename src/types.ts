@@ -115,7 +115,8 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
 	language: "zh",
-	bankFile: "QuizNow/题库.json",
+	// 默认存于 .obsidian 隐藏目录，不会显示在文件树中
+	bankFile: ".obsidian/quiznow/题库.json",
 	bankFolder: "QuizNow/题库",
 	defaultCount: 10,
 	includeTypes: {

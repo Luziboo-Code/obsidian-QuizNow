@@ -57,7 +57,8 @@ export class QuizStore {
 		};
 		setLang(this.settings.language);
 
-		// 旧版题库文件夹（每题目一个 .md）一次性迁移为数据库文件
+		// 旧版数据迁移：优先迁移可见目录下的 JSON 数据库，再迁移更早的 .md 文件夹版
+		await this.migrateVisibleBankIfNeeded();
 		await this.migrateLegacyBankIfNeeded();
 		await this.loadBank();
 		// 兜底：数据库为空但旧版 data.json 中残留题目快照时，写回数据库
@@ -92,10 +93,8 @@ export class QuizStore {
 		return normalizePath(this.settings.bankFile || "QuizNow/题库.json");
 	}
 
-	/** 确保数据库文件所在目录存在 */
-	async ensureBankFile(): Promise<string> {
-		const path = this.bankPath();
-		const dir = path.split("/").slice(0, -1).join("/");
+	/** 确保目录存在（递归创建） */
+	private async ensureDir(dir: string): Promise<void> {
 		const adapter = this.plugin.app.vault.adapter;
 		let cur = "";
 		for (const p of dir.split("/").filter(Boolean)) {
@@ -104,6 +103,13 @@ export class QuizStore {
 				await adapter.mkdir(cur);
 			}
 		}
+	}
+
+	/** 确保数据库文件所在目录存在 */
+	async ensureBankFile(): Promise<string> {
+		const path = this.bankPath();
+		const dir = path.split("/").slice(0, -1).join("/");
+		if (dir) await this.ensureDir(dir);
 		return path;
 	}
 
@@ -143,6 +149,55 @@ export class QuizStore {
 			path,
 			JSON.stringify(payload, null, 2)
 		);
+	}
+
+	/**
+	 * 旧版本数据位于库内可见目录（QuizNow/），会显示在文件树中；
+	 * 现在默认迁移到 .obsidian 隐藏目录，避免占用文件树。
+	 */
+	private async migrateVisibleBankIfNeeded(): Promise<void> {
+		const adapter = this.plugin.app.vault.adapter;
+		const target = this.bankPath();
+		const oldPath = normalizePath("QuizNow/题库.json");
+		if (target === oldPath) return; // 用户自定义路径仍为旧位置，不迁移
+		if (await adapter.exists(target)) return; // 新位置已有数据
+		try {
+			if (!(await adapter.exists(oldPath))) return; // 无旧数据
+			// 1. 迁移题库数据库
+			await this.ensureBankFile();
+			const text = await adapter.read(oldPath);
+			await adapter.write(target, text);
+			await adapter.remove(oldPath);
+			// 2. 迁移备份文件
+			const oldBackup = normalizePath("QuizNow/backups");
+			if (await adapter.exists(oldBackup)) {
+				const newBackupDir = this.backupFolder();
+				await this.ensureDir(newBackupDir);
+				const list = await adapter.list(oldBackup);
+				for (const f of list.files) {
+					const name = f.split("/").pop() || f;
+					await adapter.write(
+						normalizePath(`${newBackupDir}/${name}`),
+						await adapter.read(f)
+					);
+					await adapter.remove(f);
+				}
+				try {
+					await adapter.rmdir(oldBackup, false);
+				} catch {
+					// 忽略删除失败
+				}
+			}
+			// 3. 删除空的旧 QuizNow 目录（非空则保留，避免误删用户文件）
+			try {
+				await adapter.rmdir(normalizePath("QuizNow"), false);
+			} catch {
+				// 非空或不存在，忽略
+			}
+			new Notice(t("notice.movedHidden", { path: target }));
+		} catch (e) {
+			console.error("[QuizNow] 隐藏目录迁移失败", e);
+		}
 	}
 
 	/** 旧版题库文件夹（每题目一个 .md）一次性迁移为数据库文件 */
@@ -225,6 +280,17 @@ export class QuizStore {
 		this.data.weakIds = this.data.weakIds.filter((x) => x !== id);
 		delete this.data.sm[id];
 		await this.persistBank();
+		await this.save();
+	}
+
+	/** 删除一条考试记录（同时重算各试卷最高分） */
+	async removeExamRecord(id: string): Promise<void> {
+		this.data.examRecords = this.data.examRecords.filter((r) => r.id !== id);
+		const best: Record<string, number> = {};
+		for (const r of this.data.examRecords) {
+			best[r.name] = Math.max(best[r.name] ?? 0, r.score);
+		}
+		this.data.paperBest = best;
 		await this.save();
 	}
 
@@ -408,11 +474,7 @@ export class QuizStore {
 	async createBackup(): Promise<string> {
 		const adapter = this.plugin.app.vault.adapter;
 		const folder = this.backupFolder();
-		let cur = "";
-		for (const p of folder.split("/").filter(Boolean)) {
-			cur = cur ? `${cur}/${p}` : p;
-			if (!(await adapter.exists(cur))) await adapter.mkdir(cur);
-		}
+		await this.ensureDir(folder);
 		const stamp = backupStamp();
 		const path = normalizePath(`${folder}/quiznow-backup-${stamp}.json`);
 		const payload = {

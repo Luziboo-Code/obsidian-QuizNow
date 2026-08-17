@@ -7,7 +7,7 @@ import {
 } from "obsidian";
 import type { QuizNowApi, TabName } from "./plugin-api";
 import type { ExamRecord, ExamSession, Question, QuestionType, Settings } from "./types";
-import { newId } from "./question";
+import { newId, shuffleOptions } from "./question";
 import { generateFromNote } from "./generator";
 import { aiGenerateQuestions, defaultGeneratePrompt } from "./ai";
 import { QuizStore } from "./store";
@@ -172,7 +172,9 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 			return;
 		}
 		const count = Math.min(this.store.settings.defaultCount || 10, pool.length);
-		const picked = shuffle(pool).slice(0, count);
+		const picked = shuffle(pool)
+			.slice(0, count)
+			.map(shuffleOptions);
 		this.startSession({
 			id: newId(),
 			name: `${t("exam.name.quick")} · ${nowStamp()}`,

@@ -77,8 +77,12 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 	let fillCount = 0;
 	for (const { term, sentence } of uniqueTerms) {
 		if (fillCount >= 6) break;
-		const blanked = sentence.replace(/\*\*/g, "").replace(term, "____");
+		const blanked = cleanStem(sentence)
+			.replace(/\*\*/g, "")
+			.replace(term, "____");
 		if (blanked.length > 160) continue;
+		// 挖空后没有实际题干（如纯标题 "## **术语**"）则跳过
+		if (blanked.replace(/[_\-*\s#]/g, "").length < 2) continue;
 		questions.push({
 			id: newId(),
 			type: "fill",
@@ -117,8 +121,12 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 		if (distractors.length < 3) continue;
 		const options = [term, ...distractors].sort(() => Math.random() - 0.5);
 		const answerLetter = String.fromCharCode(65 + options.indexOf(term));
-		const blanked = sentence.replace(/\*\*/g, "").replace(term, "____");
+		const blanked = cleanStem(sentence)
+			.replace(/\*\*/g, "")
+			.replace(term, "____");
 		if (blanked.length > 160) continue;
+		// 挖空后没有实际题干则跳过
+		if (blanked.replace(/[_\-*\s#]/g, "").length < 2) continue;
 		questions.push({
 			id: newId(),
 			type: "single",
@@ -139,6 +147,23 @@ function splitFrontmatter(md: string): { fm: string; body: string } {
 	const m = md.match(/^\ufeff?---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
 	if (!m) return { fm: "", body: md };
 	return { fm: m[1], body: m[2] };
+}
+
+/**
+ * 清洗题干行首的 Markdown 标记（标题 #、列表符号、引用 >），
+ * 避免生成 "## ____" 这类无法阅读的题目。
+ */
+function cleanStem(text: string): string {
+	return text
+		.split("\n")
+		.map((l) =>
+			l
+				.replace(/^\s*#{1,6}\s*/, "")
+				.replace(/^\s*[-*+]\s+/, "")
+				.replace(/^\s*>\s*/, "")
+		)
+		.join("\n")
+		.trim();
 }
 
 /**

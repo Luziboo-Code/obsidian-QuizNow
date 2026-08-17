@@ -54,7 +54,7 @@
 **Highlights**
 
 - 📄 **One-click generation from the document header** — open any note and click the 📋 button in the top-right corner of its title bar
-- 🗄️ **Single-file database** — all questions live in `QuizNow/题库.json` (configurable), synced with your vault and easy to back up
+- 🗄️ **Single-file database, hidden from the file explorer** — all questions live in `.obsidian/quiznow/题库.json` (configurable), synced with your vault and easy to back up
 - 💾 **One-click backup/restore** — export everything (bank + records + memory progress + settings) to a single JSON file
 - 🤖 **Optional AI enhancement** — plug in any OpenAI-compatible API for AI question generation and explanations; built-in zero-cost generation when not configured
 - 🔧 **Custom generation prompts** — manage multiple AI prompts and switch between them anytime
@@ -70,8 +70,9 @@
 3. **Open**: click the 🎓 icon in the left ribbon, or run the command
    `QuizNow: Open QuizNow panel` (opens in a **new tab in the main content area**, not the sidebar).
 
-> On first launch a sample bank database is created at `QuizNow/题库.json`
-> with 3 example questions — inspect, edit or delete them freely.
+> On first launch a sample bank database is created (`.obsidian/quiznow/题库.json`
+> by default — inside Obsidian's hidden folder, so it **never appears in the file
+> explorer**). Browse questions via the Home stat cards.
 
 ---
 
@@ -135,11 +136,12 @@
 
 ---
 
-## 🗄️ Question Bank (Single-File Database)
+## 🗄️ Question Bank (Single-File Database · Hidden Folder)
 
-The bank is stored in **one JSON database file** (default `QuizNow/题库.json`,
-path configurable in Settings). All questions live in a single file — no more
-scattered Markdown files — and the file syncs with your vault and backs up easily.
+The bank is stored in **one JSON database file** (default `.obsidian/quiznow/题库.json`,
+path configurable in Settings). All questions live in a single file — no scattered
+files — and it lives inside Obsidian's hidden `.obsidian` folder, so it **does not
+appear in the file explorer**.
 
 Database structure:
 
@@ -161,9 +163,10 @@ Database structure:
 }
 ```
 
-> **Upgrading**: when upgrading from an older version, Markdown question files in the
-> legacy `QuizNow/题库/` folder are automatically migrated into the database file
-> (the old folder is kept — you can delete it manually).
+> **Upgrading**: when upgrading from an older version, the bank database, backup
+> files and legacy Markdown question files located in the visible `QuizNow/` folder
+> are **automatically migrated to the hidden `.obsidian/quiznow/` folder**, and the
+> old folder is cleaned up (other user files are never deleted).
 
 ---
 
@@ -173,7 +176,7 @@ In "Settings → Data Backup":
 
 - **Back Up Now**: export the question bank, exam records, SM-2 memory progress and
   all settings into a single `quiznow-backup-<timestamp>.json` file
-  (stored in `QuizNow/backups/` by default);
+  (stored in `.obsidian/quiznow/backups/` by default);
 - **Restore**: pick any backup from the list (**a backup of current data is created
   automatically before restoring**, so nothing is lost accidentally);
 - Backup files can be copied to other devices and fully restore the plugin state.
@@ -216,8 +219,9 @@ you generate questions, and is simpler to sync, back up and migrate. Functionall
 it is identical to the old folder-based bank.
 
 **Q: Will I lose my old questions after upgrading?**
-A: No. Questions in the legacy `QuizNow/题库/` folder are migrated automatically to
-`QuizNow/题库.json`; you can delete the old folder afterwards.
+A: No. The bank database, backup files and Markdown question folders under the old
+`QuizNow/` folder are migrated automatically to the hidden `.obsidian/quiznow/`
+folder, and the old folder is cleaned up.
 
 **Q: Can I use the plugin without an AI key?**
 A: Yes. Without AI, the built-in heuristic generator is used (bold terms → fill /
@@ -229,8 +233,9 @@ the new device, install the plugin there, then Settings → Data Backup → Rest
 
 **Q: Where is the data stored? Will uninstalling the plugin delete it?**
 A: Data lives in the plugin's `data.json` and the bank database file
-(`QuizNow/题库.json`). **Uninstalling the plugin does not delete these files** —
-they are re-read automatically after reinstallation.
+(`.obsidian/quiznow/题库.json` by default — inside Obsidian's hidden folder, so it
+**does not appear in the file explorer**). **Uninstalling the plugin does not delete
+these files** — they are re-read automatically after reinstallation.
 
 ---
 
@@ -258,8 +263,8 @@ npm run build      # type-check + production build
 
 ## 🔒 Data & Privacy
 
-- All data stays **local to your vault** (plugin `data.json` + bank database file);
-  nothing is uploaded anywhere;
+- All data stays **local to your vault** (plugin `data.json` + bank database file in
+  `.obsidian/quiznow/`, hidden from the file explorer); nothing is uploaded anywhere;
 - AI features only send the current note's content to your configured API endpoint
   **when you explicitly click generate**;
 - Please review the data policies of whichever third-party AI service you configure.

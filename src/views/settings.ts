@@ -39,7 +39,13 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	card.appendChild(el("div", "qn-subtitle", t("settings.exam")));
 	const bankInput = el("input", "qn-input") as HTMLInputElement;
 	bankInput.value = s.bankFile;
-	card.appendChild(field(t("settings.bankFolder"), bankInput));
+	card.appendChild(
+		field(
+			t("settings.bankFolder"),
+			bankInput,
+			t("settings.bankFolderHint")
+		)
+	);
 
 	const countInput = el("input", "qn-input") as HTMLInputElement;
 	countInput.type = "number";

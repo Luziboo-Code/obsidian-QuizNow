@@ -1,14 +1,26 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { ExamRecord, ExamSession, Question, QuestionType } from "../types";
-import { checkAnswer, answerText, userAnswerText, newId } from "../question";
+import { checkAnswer, answerText, userAnswerText, newId, displayContent, shuffleOptions } from "../question";
 import { el, clear, btn, badge, field, progressBar, emptyState } from "../ui";
 import { t } from "../i18n";
 
 const TYPE_KEYS: QuestionType[] = ["single", "multiple", "fill", "judge"];
 
+/** 当前考试页注册的快捷键监听（每次渲染替换，视图切换时移除） */
+let examKeyHandler: ((e: KeyboardEvent) => void) | null = null;
+
+/** 移除考试快捷键监听（由视图层在每次渲染前调用） */
+export function cleanupExamKeys(): void {
+	if (examKeyHandler) {
+		document.removeEventListener("keydown", examKeyHandler);
+		examKeyHandler = null;
+	}
+}
+
 export function renderExam(container: HTMLElement, plugin: QuizNowApi): void {
 	clear(container);
+	cleanupExamKeys();
 	const session = plugin.currentSession;
 	if (session && session.index < session.questions.length) {
 		renderAnswering(container, plugin, session);
@@ -99,7 +111,9 @@ function renderConfig(container: HTMLElement, plugin: QuizNowApi): void {
 			);
 			return;
 		}
-		const picked = shuffle(pool).slice(0, Math.min(count, pool.length));
+		const picked = shuffle(pool)
+			.slice(0, Math.min(count, pool.length))
+			.map((q) => (origin === "bank" ? shuffleOptions(q) : q));
 		const name =
 			nameInput.value.trim() ||
 			`${origin === "weak" ? t("exam.name.weak") : t("exam.name.bank")} · ${nowStamp()}`;
@@ -180,8 +194,14 @@ function renderAnswering(
 	head.appendChild(
 		el("span", "qn-note", t("exam.qNo", { n: session.index + 1 }))
 	);
+	// 题目来源（灰色小字）
+	if (q.source) {
+		const src = el("span", "qn-source", q.source);
+		src.setAttribute("title", q.source);
+		head.appendChild(src);
+	}
 	card.appendChild(head);
-	card.appendChild(el("div", "qn-question-content", q.content));
+	card.appendChild(el("div", "qn-question-content", displayContent(q.content)));
 
 	// 作答控件
 	const control = el("div", "");
@@ -209,6 +229,10 @@ function renderAnswering(
 					}
 				})
 			);
+			// 快捷键提示
+			actionRow.appendChild(
+				el("span", "qn-key-hint", t("exam.keyHint"))
+			);
 		});
 	};
 	buildAnswerControl(control, q, state, doSubmit);
@@ -220,6 +244,27 @@ function renderAnswering(
 	}
 
 	container.appendChild(card);
+
+	// 快捷键：提交后按 空格 / 回车 进入下一题（输入框内不拦截，避免影响打字）
+	const keyHandler = (e: KeyboardEvent) => {
+		if (e.key !== " " && e.key !== "Enter" && e.key !== "Spacebar") return;
+		if (!state.submitted) return;
+		const target = e.target as HTMLElement | null;
+		const inField =
+			!!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+		if (inField && e.key === " ") return; // 输入框内空格用于输入
+		e.preventDefault();
+		const isLast = session.index >= session.questions.length - 1;
+		if (isLast) {
+			void finish(container, plugin, session);
+		} else {
+			session.index += 1;
+			plugin.refresh();
+		}
+	};
+	cleanupExamKeys();
+	examKeyHandler = keyHandler;
+	document.addEventListener("keydown", keyHandler);
 }
 
 function buildAnswerControl(
@@ -420,7 +465,7 @@ function renderSummary(
 			const head = el("div", "qn-item-head");
 			head.appendChild(badge(q.type));
 			item.appendChild(head);
-			item.appendChild(el("div", "qn-item-content", q.content));
+			item.appendChild(el("div", "qn-item-content", displayContent(q.content)));
 			const ans = el("div", "qn-gen-answer");
 			ans.appendChild(el("span", "", t("exam.answerLabel")));
 			ans.appendChild(el("b", "", answerText(q)));
