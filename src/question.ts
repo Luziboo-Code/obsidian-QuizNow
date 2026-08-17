@@ -214,12 +214,12 @@ export function checkAnswer(q: Question, userAnswer: string[]): boolean {
 	return false;
 }
 
-/** 展示用：正确答案的可读文本 */
+/** 展示用：正确答案的可读文本（选择题附带选项内容，如 "B. 巴黎"） */
 export function answerText(q: Question): string {
 	switch (q.type) {
 		case "single":
 		case "multiple":
-			return q.answer.join("、");
+			return q.answer.map((a) => letterWithOption(q, a)).join("、");
 		case "fill":
 			return q.answer.join(" / ");
 		case "judge":
@@ -227,12 +227,22 @@ export function answerText(q: Question): string {
 	}
 }
 
-/** 展示用：用户答案的可读文本 */
+/** 把选择题答案字母转换为 "字母. 选项内容"（找不到选项时退回纯字母） */
+function letterWithOption(q: Question, letter: string): string {
+	const idx = letter.charCodeAt(0) - 65;
+	const opt = q.options && q.options[idx] ? cleanOption(q.options[idx]) : "";
+	return opt ? `${letter}. ${opt}` : letter;
+}
+
+/** 展示用：用户答案的可读文本（选择题附带选项内容） */
 export function userAnswerText(q: Question, userAnswer: string[]): string {
 	switch (q.type) {
 		case "single":
 		case "multiple":
-			return userAnswer.join("、") || t("answer.none");
+			return (
+				userAnswer.map((a) => letterWithOption(q, a)).join("、") ||
+				t("answer.none")
+			);
 		case "fill":
 			return userAnswer.join("") || t("answer.none");
 		case "judge":

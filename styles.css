@@ -676,12 +676,13 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 /* ---------- 复习评级按钮 ---------- */
 .qn-rate-row {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
 	gap: 8px;
 }
 
 .qn-rate {
-	padding: 13px 4px;
+	padding: 16px 8px;
+	min-height: 58px;
 	border-radius: var(--qn-radius-sm);
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
@@ -692,8 +693,10 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 3px;
-	line-height: 1.35;
+	justify-content: center;
+	gap: 4px;
+	line-height: 1.4;
+	box-sizing: border-box;
 }
 
 .qn-rate:hover {
@@ -704,6 +707,10 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	font-size: 10.5px;
 	font-weight: 400;
 	color: var(--text-muted);
+	text-align: center;
+	white-space: normal;
+	word-break: break-word;
+	line-height: 1.3;
 }
 
 .qn-rate.forgot { color: var(--qn-danger); border-color: color-mix(in srgb, var(--qn-danger) 45%, transparent); }
