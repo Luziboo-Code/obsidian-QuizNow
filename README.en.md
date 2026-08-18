@@ -265,6 +265,10 @@ npm run build      # type-check + production build
 
 - All data stays **local to your vault** (plugin `data.json` + bank database file in
   `.obsidian/quiznow/`, hidden from the file explorer); nothing is uploaded anywhere;
+- **File access transparency**: the plugin lists the **filenames** of all Markdown
+  files in the vault (to link weak-spot explanations back to their source notes).
+  **File contents** are only read when you explicitly run actions such as
+  "Generate questions from current note" or "Generate Explanation";
 - AI features only send the current note's content to your configured API endpoint
   **when you explicitly click generate**;
 - Please review the data policies of whichever third-party AI service you configure.
