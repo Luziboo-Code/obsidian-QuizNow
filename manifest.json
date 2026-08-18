@@ -1,7 +1,7 @@
 {
 	"id": "quiznow",
 	"name": "QuizNow",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"minAppVersion": "1.4.0",
 	"description": "Generate exam questions from your notes in one click. Based on current notes, quickly generate exam questions, supporting single choice, multiple choice, fill-in-the-blank, and true/false questions. SM-2 spaced repetition and weak point management.",
 	"author": "Luziboo",

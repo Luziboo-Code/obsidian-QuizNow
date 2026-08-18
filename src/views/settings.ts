@@ -7,6 +7,10 @@ import { LANG_IDS, LANG_LABELS, t } from "../i18n";
 
 const TYPE_KEYS: QuestionType[] = ["single", "multiple", "fill", "judge"];
 
+/**
+ * 设置界面：所有配置修改后自动保存并即时生效，无需点击保存按钮。
+ * 文本/数字输入防抖保存（不打断打字），下拉框/复选框/题型等即时保存。
+ */
 export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void {
 	clear(container);
 	const s = plugin.store.settings;
@@ -14,6 +18,44 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	// 本地状态（保存时才写回）
 	const prompts: CustomPrompt[] = s.customPrompts.map((p) => ({ ...p }));
 	let activePromptId = s.activePromptId;
+
+	// 底部自动保存状态条（sticky，始终可见）
+	const saveBar = el("div", "qn-save-bar");
+	const statusEl = el("span", "qn-autosave-status", t("settings.autoSaveHint"));
+	saveBar.appendChild(statusEl);
+
+	let statusTimer: number | null = null;
+	const flashStatus = (): void => {
+		statusEl.textContent = t("settings.autoSaved");
+		if (statusTimer) window.clearTimeout(statusTimer);
+		statusTimer = window.setTimeout(() => {
+			statusEl.textContent = t("settings.autoSaveHint");
+		}, 1600);
+	};
+
+	/** 自动保存（immediate = 即时保存；否则防抖） */
+	const saveSettings = (patch: Partial<Settings>, immediate = false): void => {
+		const apply = (): void => {
+			const langChanged =
+				patch.language !== undefined &&
+				patch.language !== plugin.store.settings.language;
+			void plugin.store.updateSettings(patch).then(() => {
+				flashStatus();
+				if (langChanged) {
+					// 语言变化：立即刷新界面并重注册命令
+					plugin.refreshCommands?.(true);
+					plugin.refresh();
+				}
+			});
+		};
+		if (immediate) {
+			apply();
+		} else {
+			if (debounceTimer) window.clearTimeout(debounceTimer);
+			debounceTimer = window.setTimeout(apply, 400);
+		}
+	};
+	let debounceTimer: number | null = null;
 
 	const title = el("div", "qn-title");
 	setIcon(title, "settings");
@@ -32,6 +74,9 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		langSel.appendChild(o);
 	}
 	langSel.value = s.language;
+	langSel.addEventListener("change", () => {
+		saveSettings({ language: langSel.value as Lang }, true);
+	});
 	card.appendChild(field(t("settings.language"), langSel, "💡 " + t("settings.langHint")));
 
 	// ---- 考试 ----
@@ -39,18 +84,22 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	card.appendChild(el("div", "qn-subtitle", t("settings.exam")));
 	const bankInput = el("input", "qn-input") as HTMLInputElement;
 	bankInput.value = s.bankFile;
+	bankInput.addEventListener("input", () => {
+		saveSettings({
+			bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
+		});
+	});
 	card.appendChild(
-		field(
-			t("settings.bankFolder"),
-			bankInput,
-			t("settings.bankFolderHint")
-		)
+		field(t("settings.bankFolder"), bankInput, t("settings.bankFolderHint"))
 	);
 
 	const countInput = el("input", "qn-input") as HTMLInputElement;
 	countInput.type = "number";
 	countInput.min = "1";
 	countInput.value = String(s.defaultCount);
+	countInput.addEventListener("input", () => {
+		saveSettings({ defaultCount: Math.max(1, parseInt(countInput.value, 10) || 10) });
+	});
 	card.appendChild(field(t("settings.defaultCount"), countInput));
 
 	const scoreSel = el("select", "qn-select") as HTMLSelectElement;
@@ -64,18 +113,29 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		scoreSel.appendChild(o);
 	}
 	scoreSel.value = s.scoreMode;
+	scoreSel.addEventListener("change", () => {
+		saveSettings({ scoreMode: scoreSel.value as Settings["scoreMode"] }, true);
+	});
 	card.appendChild(field(t("settings.scoreMode"), scoreSel));
 
 	const pointsInput = el("input", "qn-input") as HTMLInputElement;
 	pointsInput.type = "number";
 	pointsInput.min = "1";
 	pointsInput.value = String(s.pointsPerQuestion);
+	pointsInput.addEventListener("input", () => {
+		saveSettings({
+			pointsPerQuestion: Math.max(1, parseInt(pointsInput.value, 10) || 10),
+		});
+	});
 	card.appendChild(field(t("settings.pointsPer"), pointsInput));
 
 	const homeLimitInput = el("input", "qn-input") as HTMLInputElement;
 	homeLimitInput.type = "number";
 	homeLimitInput.min = "0";
 	homeLimitInput.value = String(s.homePaperLimit || 0);
+	homeLimitInput.addEventListener("input", () => {
+		saveSettings({ homePaperLimit: Math.max(0, parseInt(homeLimitInput.value, 10) || 0) });
+	});
 	card.appendChild(field(t("settings.homeLimit"), homeLimitInput, t("settings.homeLimitHelp")));
 
 	// 生成方式：直接生成 / 弹出配置弹窗
@@ -93,6 +153,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 				.querySelectorAll(".qn-chip")
 				.forEach((n) => n.classList.remove("active"));
 			chip.classList.add("active");
+			saveSettings({ genMode: value }, true);
 		});
 		return chip;
 	};
@@ -110,18 +171,31 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	efInput.step = "0.1";
 	efInput.min = "1.3";
 	efInput.value = String(s.sm2InitialEF);
+	efInput.addEventListener("input", () => {
+		saveSettings({ sm2InitialEF: Math.max(1.3, parseFloat(efInput.value) || 2.5) });
+	});
 	card.appendChild(field(t("settings.ef"), efInput, t("settings.efHelp")));
 
 	const minIntervalInput = el("input", "qn-input") as HTMLInputElement;
 	minIntervalInput.type = "number";
 	minIntervalInput.min = "0";
 	minIntervalInput.value = String(s.sm2MinInterval);
+	minIntervalInput.addEventListener("input", () => {
+		saveSettings({
+			sm2MinInterval: Math.max(0, parseInt(minIntervalInput.value, 10) || 1),
+		});
+	});
 	card.appendChild(field(t("settings.minInterval"), minIntervalInput));
 
 	const masteryInput = el("input", "qn-input") as HTMLInputElement;
 	masteryInput.type = "number";
 	masteryInput.min = "1";
 	masteryInput.value = String(s.weakMasteryReps);
+	masteryInput.addEventListener("input", () => {
+		saveSettings({
+			weakMasteryReps: Math.max(1, parseInt(masteryInput.value, 10) || 2),
+		});
+	});
 	card.appendChild(field(t("settings.masteryReps"), masteryInput));
 
 	// ---- 题型 ----
@@ -138,6 +212,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		chip.addEventListener("click", () => {
 			chosen[type] = !chosen[type];
 			chip.classList.toggle("active", chosen[type]);
+			saveSettings({ includeTypes: { ...chosen } }, true);
 		});
 		chipsWrap.appendChild(chip);
 	}
@@ -149,6 +224,9 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	const aiToggle = el("input", "") as HTMLInputElement;
 	aiToggle.type = "checkbox";
 	aiToggle.checked = s.aiEnabled;
+	aiToggle.addEventListener("change", () => {
+		saveSettings({ aiEnabled: aiToggle.checked }, true);
+	});
 	const aiCheckRow = el("label", "qn-check-row");
 	aiCheckRow.appendChild(aiToggle);
 	aiCheckRow.appendChild(el("span", "", t("settings.aiEnable")));
@@ -156,16 +234,27 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 
 	const urlInput = el("input", "qn-input") as HTMLInputElement;
 	urlInput.value = s.aiBaseUrl;
+	urlInput.addEventListener("input", () => {
+		saveSettings({
+			aiBaseUrl: urlInput.value.trim() || "https://api.openai.com/v1",
+		});
+	});
 	card.appendChild(field(t("settings.apiUrl"), urlInput, t("settings.apiUrlHelp")));
 
 	const keyInput = el("input", "qn-input") as HTMLInputElement;
 	keyInput.type = "password";
 	keyInput.value = s.aiApiKey;
 	keyInput.placeholder = "sk-...";
+	keyInput.addEventListener("input", () => {
+		saveSettings({ aiApiKey: keyInput.value.trim() });
+	});
 	card.appendChild(field(t("settings.apiKey"), keyInput));
 
 	const modelInput = el("input", "qn-input") as HTMLInputElement;
 	modelInput.value = s.aiModel;
+	modelInput.addEventListener("input", () => {
+		saveSettings({ aiModel: modelInput.value.trim() || "gpt-4o-mini" });
+	});
 	card.appendChild(field(t("settings.model"), modelInput));
 
 	const aiCountInput = el("input", "qn-input") as HTMLInputElement;
@@ -173,11 +262,19 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	aiCountInput.min = "1";
 	aiCountInput.max = "20";
 	aiCountInput.value = String(s.aiCount);
+	aiCountInput.addEventListener("input", () => {
+		saveSettings({
+			aiCount: Math.min(20, Math.max(1, parseInt(aiCountInput.value, 10) || 5)),
+		});
+	});
 	card.appendChild(field(t("settings.aiCount"), aiCountInput));
 
 	const aiExpToggle = el("input", "") as HTMLInputElement;
 	aiExpToggle.type = "checkbox";
 	aiExpToggle.checked = s.aiExplanation;
+	aiExpToggle.addEventListener("change", () => {
+		saveSettings({ aiExplanation: aiExpToggle.checked }, true);
+	});
 	const aiExpRow = el("label", "qn-check-row");
 	aiExpRow.appendChild(aiExpToggle);
 	aiExpRow.appendChild(el("span", "", t("settings.aiExplain")));
@@ -209,6 +306,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		activeSel.value = activePromptId;
 		activeSel.addEventListener("change", () => {
 			activePromptId = activeSel.value;
+			saveSettings({ activePromptId }, true);
 		});
 		promptsBox.appendChild(field(t("settings.promptActive"), activeSel));
 
@@ -229,6 +327,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 					const idx = prompts.indexOf(p);
 					if (idx >= 0) prompts.splice(idx, 1);
 					if (activePromptId === p.id) activePromptId = "";
+					saveSettings({ customPrompts: prompts, activePromptId }, true);
 					renderPromptsBox();
 				});
 				headRow.appendChild(del);
@@ -260,6 +359,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 				}
 				prompts.push({ id: newId(), name, content });
 				activePromptId = prompts[prompts.length - 1].id;
+				saveSettings({ customPrompts: prompts, activePromptId }, true);
 				renderPromptsBox();
 			})
 		);
@@ -267,39 +367,6 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	};
 	renderPromptsBox();
 
-	// ---- 保存按钮：sticky 吸附在底部，滚动设置时始终可见 ----
-	const saveBar = el("div", "qn-save-bar");
-	saveBar.appendChild(
-		btn("qn-btn-primary qn-btn-block", t("settings.save"), () => {
-				const patch: Partial<Settings> = {
-					language: langSel.value as Lang,
-					genMode,
-					bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
-					defaultCount: Math.max(1, parseInt(countInput.value, 10) || 10),
-					scoreMode: scoreSel.value as Settings["scoreMode"],
-					pointsPerQuestion: Math.max(1, parseInt(pointsInput.value, 10) || 10),
-					homePaperLimit: Math.max(0, parseInt(homeLimitInput.value, 10) || 0),
-					sm2InitialEF: Math.max(1.3, parseFloat(efInput.value) || 2.5),
-					sm2MinInterval: Math.max(0, parseInt(minIntervalInput.value, 10) || 1),
-					weakMasteryReps: Math.max(1, parseInt(masteryInput.value, 10) || 2),
-					includeTypes: { ...chosen },
-					aiEnabled: aiToggle.checked,
-					aiBaseUrl: urlInput.value.trim() || "https://api.openai.com/v1",
-					aiApiKey: keyInput.value.trim(),
-					aiModel: modelInput.value.trim() || "gpt-4o-mini",
-					aiCount: Math.min(20, Math.max(1, parseInt(aiCountInput.value, 10) || 5)),
-					aiExplanation: aiExpToggle.checked,
-					customPrompts: prompts,
-					activePromptId,
-				};
-				void plugin.store.updateSettings(patch).then(() => {
-					new Notice(t("settings.saved"));
-					// 立即生效：刷新界面 + 重注册命令（语言切换后命令名立即更新）
-					plugin.refreshCommands?.(true);
-					plugin.refresh();
-				});
-			})
-		);
 	container.appendChild(card);
 
 	// ---- 数据备份 ----
@@ -404,6 +471,6 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	danger.appendChild(row);
 	container.appendChild(danger);
 
-	// 保存按钮栏放在最后，sticky 吸附在底部始终可见
+	// 自动保存状态条（放在最后，sticky 吸附底部）
 	container.appendChild(saveBar);
 }

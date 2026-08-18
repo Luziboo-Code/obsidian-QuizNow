@@ -464,6 +464,9 @@ export class QuizStore {
 	// ---------- 设置 ----------
 
 	async updateSettings(patch: Partial<Settings>): Promise<void> {
+		const bankChanged =
+			patch.bankFile !== undefined &&
+			patch.bankFile !== this.settings.bankFile;
 		this.settings = {
 			...this.settings,
 			...patch,
@@ -474,7 +477,8 @@ export class QuizStore {
 		};
 		setLang(this.settings.language);
 		await this.save();
-		await this.loadBank(); // 题库数据库路径可能变化
+		// 仅题库数据库路径变化时才重读题库
+		if (bankChanged) await this.loadBank();
 	}
 
 	// ---------- 备份 / 恢复 ----------

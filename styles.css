@@ -91,6 +91,15 @@ body.theme-dark .qn-view {
 	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* 自动保存状态文字 */
+.qn-autosave-status {
+	font-size: 12px;
+	color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
 /* ---------- 通用卡片 ---------- */
 .qn-card {
 	background: var(--background-secondary);
