@@ -144,7 +144,7 @@ async function genExplanation(
 ): Promise<void> {
 	// 防止重复点击
 	actions.querySelectorAll("button").forEach((b) => {
-		(b as HTMLButtonElement).disabled = true;
+		b.disabled = true;
 	});
 	explainWrap.empty();
 	explainWrap.appendChild(loading(t("weak.generating")));
@@ -175,7 +175,7 @@ async function genExplanation(
 	explainWrap.empty();
 	explainWrap.appendChild(el("div", "qn-explain", text));
 	actions.querySelectorAll("button").forEach((b) => {
-		(b as HTMLButtonElement).disabled = false;
+		b.disabled = false;
 	});
 }
 

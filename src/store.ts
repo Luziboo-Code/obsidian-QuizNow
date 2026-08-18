@@ -15,7 +15,7 @@ import { setLang, t } from "./i18n";
 /**
  * 数据与题库数据库的管理层。
  *
- * 题库使用单一 JSON 文件存储（默认 QuizNow/题库.json），所有题目集中在一个
+ * 题库使用单一 JSON 文件存储（默认 configDir/quiznow/questions.json），所有题目集中在一个
  * 数据库文件中，不再产生大量细碎的 Markdown 文件；考试记录 / SM-2 卡片 /
  * 复习与薄弱点队列保存在插件 data.json 中。两者均可通过「数据备份」导出。
  */
@@ -57,9 +57,10 @@ export class QuizStore {
 		};
 		setLang(this.settings.language);
 
-		// 旧版默认路径（中文文件名 .obsidian/quiznow/题库.json）自动切换到英文新默认
-		if (this.settings.bankFile === ".obsidian/quiznow/题库.json") {
-			this.settings.bankFile = DEFAULT_SETTINGS.bankFile;
+		// 旧版默认路径（configDir 下的中文文件名 题库.json）自动切换到新默认
+		const cfgDir = this.plugin.app.vault.configDir;
+		if (this.settings.bankFile === normalizePath(`${cfgDir}/quiznow/题库.json`)) {
+			this.settings.bankFile = "";
 		}
 
 		// 旧版数据迁移：优先迁移可见目录下的 JSON 数据库，再迁移更早的 .md 文件夹版
@@ -93,9 +94,13 @@ export class QuizStore {
 
 	// ---------- 题库数据库（单文件 JSON） ----------
 
-	/** 题库数据库文件路径 */
+	/** 题库数据库文件路径（默认：Obsidian 配置目录 configDir 下的 quiznow/questions.json） */
 	bankPath(): string {
-		return normalizePath(this.settings.bankFile || "QuizNow/题库.json");
+		if (this.settings.bankFile && this.settings.bankFile.trim()) {
+			return normalizePath(this.settings.bankFile);
+		}
+		const configDir = this.plugin.app.vault.configDir;
+		return normalizePath(`${configDir}/quiznow/questions.json`);
 	}
 
 	/** 确保目录存在（递归创建） */
@@ -163,10 +168,11 @@ export class QuizStore {
 	private async migrateVisibleBankIfNeeded(): Promise<void> {
 		const adapter = this.plugin.app.vault.adapter;
 		const target = this.bankPath();
-		// 旧位置候选：早期可见目录版本、以及旧默认中文文件名的隐藏版本
+		const configDir = this.plugin.app.vault.configDir;
+		// 旧位置候选：早期可见目录版本、以及旧默认中文文件名的配置目录版本
 		const candidates = [
 			normalizePath("QuizNow/题库.json"),
-			normalizePath(".obsidian/quiznow/题库.json"),
+			normalizePath(`${configDir}/quiznow/题库.json`),
 		].filter((p) => p !== target);
 		let oldPath: string | null = null;
 		for (const c of candidates) {

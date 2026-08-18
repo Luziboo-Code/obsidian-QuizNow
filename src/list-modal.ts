@@ -3,7 +3,7 @@ import type { QuizNowApi } from "./plugin-api";
 import type { Question } from "./types";
 import { answerText, displayContent } from "./question";
 import { isDue } from "./sm2";
-import { el, btn, badge, iconBtn } from "./ui";
+import { el, btn, badge, iconBtn, confirmDialog } from "./ui";
 import { t } from "./i18n";
 
 export interface QuestionListItem {
@@ -39,8 +39,7 @@ export class QuestionListModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const wrap = el("div", "qn-content");
-		wrap.style.padding = "14px";
+		const wrap = el("div", "qn-content qn-modal-body");
 		contentEl.appendChild(wrap);
 
 		const head = el("div", "qn-title");
@@ -68,9 +67,8 @@ export class QuestionListModal extends Modal {
 					() => {
 						this.deleteQuestion(item.question);
 					},
-					"qn-btn-danger qn-btn-sm"
+					"qn-btn-danger qn-btn-sm qn-ml-auto"
 				);
-				delBtn.style.marginLeft = "auto";
 				h.appendChild(delBtn);
 				row.appendChild(h);
 				row.appendChild(
@@ -98,18 +96,19 @@ export class QuestionListModal extends Modal {
 	}
 
 	private deleteQuestion(q: Question): void {
-		if (!confirm(t("modal.deleteQuestionConfirm"))) return;
-		void (async () => {
-			try {
-				await this.plugin.store.removeFromBank(q.id);
-				this.items = this.items.filter((x) => x.question.id !== q.id);
-				new Notice(t("modal.deletedQuestion"));
-				this.plugin.refresh(); // 刷新首页统计
-				this.render();
-			} catch (e) {
-				new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
-			}
-		})();
+		confirmDialog(this.app, t("modal.deleteQuestionConfirm"), () => {
+			void (async () => {
+				try {
+					await this.plugin.store.removeFromBank(q.id);
+					this.items = this.items.filter((x) => x.question.id !== q.id);
+					new Notice(t("modal.deletedQuestion"));
+					this.plugin.refresh(); // 刷新首页统计
+					this.render();
+				} catch (e) {
+					new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
+				}
+			})();
+		});
 	}
 
 	onClose(): void {
@@ -157,8 +156,7 @@ export class ExamHistoryModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const wrap = el("div", "qn-content");
-		wrap.style.padding = "14px";
+		const wrap = el("div", "qn-content qn-modal-body");
 		contentEl.appendChild(wrap);
 
 		const head = el("div", "qn-title");
@@ -174,15 +172,8 @@ export class ExamHistoryModal extends Modal {
 			const list = el("div", "qn-scroll-list");
 			for (const r of this.records) {
 				const card = el("div", "qn-item");
-				const topRow = el("div", "");
-				topRow.style.display = "flex";
-				topRow.style.justifyContent = "space-between";
-				topRow.style.alignItems = "center";
-				topRow.style.gap = "8px";
-				const nameWrap = el("div", "");
-				nameWrap.style.display = "flex";
-				nameWrap.style.alignItems = "center";
-				nameWrap.style.gap = "8px";
+				const topRow = el("div", "qn-flex-between");
+				const nameWrap = el("div", "qn-flex");
 				nameWrap.appendChild(el("div", "qn-paper-name", r.name));
 				const delBtn = iconBtn(
 					"trash-2",
@@ -194,9 +185,7 @@ export class ExamHistoryModal extends Modal {
 				);
 				nameWrap.appendChild(delBtn);
 				topRow.appendChild(nameWrap);
-				const score = el("span", "qn-paper-score", `${r.score}`);
-				score.style.fontSize = "20px";
-				score.style.minWidth = "auto";
+				const score = el("span", "qn-paper-score qn-score-md", `${r.score}`);
 				topRow.appendChild(score);
 				card.appendChild(topRow);
 				card.appendChild(
@@ -218,7 +207,6 @@ export class ExamHistoryModal extends Modal {
 					const wrongList = el("div", "");
 					for (const q of r.wrongQuestions) {
 						const item = el("div", "qn-gen-item");
-						item.style.marginBottom = "6px";
 						const h = el("div", "qn-question-head");
 						h.appendChild(badge(q.type));
 						item.appendChild(h);
@@ -244,18 +232,19 @@ export class ExamHistoryModal extends Modal {
 	}
 
 	private deleteRecord(r: { id: string; name: string }): void {
-		if (!confirm(t("modal.deleteRecordConfirm"))) return;
-		void (async () => {
-			try {
-				await this.plugin.store.removeExamRecord(r.id);
-				this.records = this.records.filter((x) => x.id !== r.id);
-				new Notice(t("modal.deletedRecord"));
-				this.plugin.refresh(); // 刷新首页统计与成绩卡
-				this.render();
-			} catch (e) {
-				new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
-			}
-		})();
+		confirmDialog(this.app, t("modal.deleteRecordConfirm"), () => {
+			void (async () => {
+				try {
+					await this.plugin.store.removeExamRecord(r.id);
+					this.records = this.records.filter((x) => x.id !== r.id);
+					new Notice(t("modal.deletedRecord"));
+					this.plugin.refresh(); // 刷新首页统计与成绩卡
+					this.render();
+				} catch (e) {
+					new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
+				}
+			})();
+		});
 	}
 
 	onClose(): void {

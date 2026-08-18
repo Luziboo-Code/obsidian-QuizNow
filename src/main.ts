@@ -14,6 +14,10 @@ import { QuizStore } from "./store";
 import { GenerationModal, GenerationConfigModal } from "./generate-modal";
 import { QuizNowView, VIEW_TYPE } from "./views/main";
 import { t, getLang } from "./i18n";
+import { el } from "./ui";
+
+/** 插件命令 id（Obsidian 会自动加上插件前缀，无需包含插件名） */
+const COMMAND_IDS = ["open-panel", "quick-exam", "generate-from-note"] as const;
 
 export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 	store!: QuizStore;
@@ -31,10 +35,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		this.store = new QuizStore(this);
 		await this.store.load();
 
-		this.registerView(VIEW_TYPE, (leaf) => {
-			this.view = new QuizNowView(leaf, this);
-			return this.view;
-		});
+		this.registerView(VIEW_TYPE, (leaf) => new QuizNowView(leaf, this));
 
 		this.addRibbonIcon("graduation-cap", t("ribbon.main"), () => {
 			this.openTab("home");
@@ -66,7 +67,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		this.registerEvent(
 			this.app.workspace.on("file-open", () => this.updateHeaderButton())
 		);
-		setTimeout(() => this.updateHeaderButton(), 500);
+		window.setTimeout(() => this.updateHeaderButton(), 500);
 	}
 
 	onunload(): void {
@@ -76,17 +77,17 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 	/** 注册插件命令（语言切换后重新调用以更新命令名） */
 	private registerCommands(): void {
 		this.addCommand({
-			id: "quiznow-open",
+			id: COMMAND_IDS[0],
 			name: t("cmd.open"),
 			callback: () => this.openTab("home"),
 		});
 		this.addCommand({
-			id: "quiznow-quick-exam",
+			id: COMMAND_IDS[1],
 			name: t("cmd.quickExam"),
 			callback: () => this.startQuickExam(),
 		});
 		this.addCommand({
-			id: "quiznow-generate-from-note",
+			id: COMMAND_IDS[2],
 			name: t("cmd.genNote"),
 			checkCallback: (checking) => {
 				const file = this.app.workspace.getActiveFile();
@@ -102,11 +103,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		const lang = getLang();
 		if (!force && this.cmdLang === lang) return;
 		this.cmdLang = lang;
-		for (const id of [
-			"quiznow-open",
-			"quiznow-quick-exam",
-			"quiznow-generate-from-note",
-		]) {
+		for (const id of COMMAND_IDS) {
 			try {
 				this.removeCommand(id);
 			} catch {
@@ -128,8 +125,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		if (!actions) return;
 		let btn = actions.querySelector<HTMLElement>("[data-qn-header-btn]");
 		if (!btn) {
-			btn = document.createElement("div");
-			btn.className = "clickable-icon view-action";
+			btn = el("div", "clickable-icon view-action");
 			btn.setAttribute("data-qn-header-btn", "");
 			btn.setAttribute("aria-label", t("ribbon.genDoc"));
 			setIcon(btn, "list-checks");

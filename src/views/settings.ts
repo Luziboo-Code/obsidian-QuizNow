@@ -2,7 +2,7 @@ import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { CustomPrompt, Lang, QuestionType, Settings } from "../types";
 import { newId } from "../question";
-import { el, clear, btn, field } from "../ui";
+import { el, clear, btn, field, confirmDialog } from "../ui";
 import { LANG_IDS, LANG_LABELS, t } from "../i18n";
 
 const TYPE_KEYS: QuestionType[] = ["single", "multiple", "fill", "judge"];
@@ -66,11 +66,10 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 
 	// ---- 界面语言 ----
 	card.appendChild(el("div", "qn-subtitle", t("settings.language")));
-	const langSel = el("select", "qn-select") as HTMLSelectElement;
+	const langSel = el("select", "qn-select");
 	for (const id of LANG_IDS) {
-		const o = document.createElement("option");
+		const o = el("option", "", LANG_LABELS[id]);
 		o.value = id;
-		o.textContent = LANG_LABELS[id];
 		langSel.appendChild(o);
 	}
 	langSel.value = s.language;
@@ -82,18 +81,16 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	// ---- 考试 ----
 	card.appendChild(el("div", "qn-divider"));
 	card.appendChild(el("div", "qn-subtitle", t("settings.exam")));
-	const bankInput = el("input", "qn-input") as HTMLInputElement;
-	bankInput.value = s.bankFile;
+	const bankInput = el("input", "qn-input");
+	bankInput.value = plugin.store.bankPath();
 	bankInput.addEventListener("input", () => {
-		saveSettings({
-			bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
-		});
+		saveSettings({ bankFile: bankInput.value.trim() });
 	});
 	card.appendChild(
 		field(t("settings.bankFolder"), bankInput, t("settings.bankFolderHint"))
 	);
 
-	const countInput = el("input", "qn-input") as HTMLInputElement;
+	const countInput = el("input", "qn-input");
 	countInput.type = "number";
 	countInput.min = "1";
 	countInput.value = String(s.defaultCount);
@@ -102,14 +99,13 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.defaultCount"), countInput));
 
-	const scoreSel = el("select", "qn-select") as HTMLSelectElement;
+	const scoreSel = el("select", "qn-select");
 	for (const [v, label] of [
 		["percent", t("settings.percent")],
 		["points", t("settings.points")],
 	] as const) {
-		const o = document.createElement("option");
+		const o = el("option", "", label);
 		o.value = v;
-		o.textContent = label;
 		scoreSel.appendChild(o);
 	}
 	scoreSel.value = s.scoreMode;
@@ -118,7 +114,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.scoreMode"), scoreSel));
 
-	const pointsInput = el("input", "qn-input") as HTMLInputElement;
+	const pointsInput = el("input", "qn-input");
 	pointsInput.type = "number";
 	pointsInput.min = "1";
 	pointsInput.value = String(s.pointsPerQuestion);
@@ -129,7 +125,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.pointsPer"), pointsInput));
 
-	const homeLimitInput = el("input", "qn-input") as HTMLInputElement;
+	const homeLimitInput = el("input", "qn-input");
 	homeLimitInput.type = "number";
 	homeLimitInput.min = "0";
 	homeLimitInput.value = String(s.homePaperLimit || 0);
@@ -166,7 +162,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	// ---- 复习 ----
 	card.appendChild(el("div", "qn-divider"));
 	card.appendChild(el("div", "qn-subtitle", t("settings.review")));
-	const efInput = el("input", "qn-input") as HTMLInputElement;
+	const efInput = el("input", "qn-input");
 	efInput.type = "number";
 	efInput.step = "0.1";
 	efInput.min = "1.3";
@@ -176,7 +172,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.ef"), efInput, t("settings.efHelp")));
 
-	const minIntervalInput = el("input", "qn-input") as HTMLInputElement;
+	const minIntervalInput = el("input", "qn-input");
 	minIntervalInput.type = "number";
 	minIntervalInput.min = "0";
 	minIntervalInput.value = String(s.sm2MinInterval);
@@ -187,7 +183,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.minInterval"), minIntervalInput));
 
-	const masteryInput = el("input", "qn-input") as HTMLInputElement;
+	const masteryInput = el("input", "qn-input");
 	masteryInput.type = "number";
 	masteryInput.min = "1";
 	masteryInput.value = String(s.weakMasteryReps);
@@ -221,7 +217,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	// ---- AI ----
 	card.appendChild(el("div", "qn-divider"));
 	card.appendChild(el("div", "qn-subtitle", t("settings.ai")));
-	const aiToggle = el("input", "") as HTMLInputElement;
+	const aiToggle = el("input");
 	aiToggle.type = "checkbox";
 	aiToggle.checked = s.aiEnabled;
 	aiToggle.addEventListener("change", () => {
@@ -232,7 +228,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	aiCheckRow.appendChild(el("span", "", t("settings.aiEnable")));
 	card.appendChild(aiCheckRow);
 
-	const urlInput = el("input", "qn-input") as HTMLInputElement;
+	const urlInput = el("input", "qn-input");
 	urlInput.value = s.aiBaseUrl;
 	urlInput.addEventListener("input", () => {
 		saveSettings({
@@ -241,7 +237,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.apiUrl"), urlInput, t("settings.apiUrlHelp")));
 
-	const keyInput = el("input", "qn-input") as HTMLInputElement;
+	const keyInput = el("input", "qn-input");
 	keyInput.type = "password";
 	keyInput.value = s.aiApiKey;
 	keyInput.placeholder = "sk-...";
@@ -250,14 +246,14 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.apiKey"), keyInput));
 
-	const modelInput = el("input", "qn-input") as HTMLInputElement;
+	const modelInput = el("input", "qn-input");
 	modelInput.value = s.aiModel;
 	modelInput.addEventListener("input", () => {
 		saveSettings({ aiModel: modelInput.value.trim() || "gpt-4o-mini" });
 	});
 	card.appendChild(field(t("settings.model"), modelInput));
 
-	const aiCountInput = el("input", "qn-input") as HTMLInputElement;
+	const aiCountInput = el("input", "qn-input");
 	aiCountInput.type = "number";
 	aiCountInput.min = "1";
 	aiCountInput.max = "20";
@@ -269,7 +265,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	});
 	card.appendChild(field(t("settings.aiCount"), aiCountInput));
 
-	const aiExpToggle = el("input", "") as HTMLInputElement;
+	const aiExpToggle = el("input");
 	aiExpToggle.type = "checkbox";
 	aiExpToggle.checked = s.aiExplanation;
 	aiExpToggle.addEventListener("change", () => {
@@ -292,15 +288,13 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		clear(promptsBox);
 
 		// 当前使用指令
-		const activeSel = el("select", "qn-select") as HTMLSelectElement;
-		const optDefault = document.createElement("option");
+		const activeSel = el("select", "qn-select");
+		const optDefault = el("option", "", t("settings.promptDefault"));
 		optDefault.value = "";
-		optDefault.textContent = t("settings.promptDefault");
 		activeSel.appendChild(optDefault);
 		for (const p of prompts) {
-			const o = document.createElement("option");
+			const o = el("option", "", p.name);
 			o.value = p.id;
-			o.textContent = p.name;
 			activeSel.appendChild(o);
 		}
 		activeSel.value = activePromptId;
@@ -317,11 +311,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 			const list = el("div", "qn-scroll-list");
 			for (const p of prompts) {
 				const row = el("div", "qn-item");
-				const headRow = el("div", "");
-				headRow.style.display = "flex";
-				headRow.style.alignItems = "center";
-				headRow.style.justifyContent = "space-between";
-				headRow.style.gap = "8px";
+				const headRow = el("div", "qn-flex-between");
 				headRow.appendChild(el("div", "qn-paper-name", p.name));
 				const del = btn("qn-btn-danger qn-btn-sm", t("settings.promptDelete"), () => {
 					const idx = prompts.indexOf(p);
@@ -340,12 +330,12 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 
 		// 新增指令
 		const addBox = el("div", "qn-field");
-		const nameInput = el("input", "qn-input") as HTMLInputElement;
+		const nameInput = el("input", "qn-input");
 		nameInput.type = "text";
 		nameInput.placeholder = t("settings.promptName");
 		addBox.appendChild(el("label", "", t("settings.promptName")));
 		addBox.appendChild(nameInput);
-		const contentInput = el("textarea", "qn-textarea") as HTMLTextAreaElement;
+		const contentInput = el("textarea", "qn-textarea");
 		contentInput.placeholder = t("settings.promptContent");
 		addBox.appendChild(el("label", "", t("settings.promptContent")));
 		addBox.appendChild(contentInput);
@@ -396,14 +386,21 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	backupCard.appendChild(backupListWrap);
 
 	const restoreFrom = async (b: { path: string; name: string }): Promise<void> => {
-		if (!confirm(t("settings.restoreConfirm"))) return;
-		try {
-			await plugin.store.restoreBackup(b.path);
-			new Notice(t("settings.restored", { name: b.name }));
-			plugin.refresh();
-		} catch (e) {
-			new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
-		}
+		confirmDialog(
+			plugin.app,
+			t("settings.restoreConfirm"),
+			() => {
+				void (async () => {
+					try {
+						await plugin.store.restoreBackup(b.path);
+						new Notice(t("settings.restored", { name: b.name }));
+						plugin.refresh();
+					} catch (e) {
+						new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
+					}
+				})();
+			}
+		);
 	};
 
 	const renderBackups = async (): Promise<void> => {
@@ -415,11 +412,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		}
 		for (const b of backups) {
 			const row = el("div", "qn-item");
-			const headRow = el("div", "");
-			headRow.style.display = "flex";
-			headRow.style.justifyContent = "space-between";
-			headRow.style.alignItems = "center";
-			headRow.style.gap = "8px";
+			const headRow = el("div", "qn-flex-between");
 			headRow.appendChild(el("div", "qn-paper-name", b.name));
 			const restoreBtn = btn("qn-btn-sm", t("settings.restore"), () => {
 				void restoreFrom(b);
@@ -445,19 +438,19 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	const row = el("div", "qn-btn-row");
 	row.appendChild(
 		btn("qn-btn-danger qn-btn-sm", t("settings.clearExams"), () => {
-			if (confirm(t("settings.clearExamsConfirm"))) {
+			confirmDialog(plugin.app, t("settings.clearExamsConfirm"), () => {
 				plugin.store.data.examRecords = [];
 				plugin.store.data.paperBest = {};
 				void plugin.store.save().then(() => {
 					new Notice(t("settings.examsCleared"));
 					plugin.refresh();
 				});
-			}
+			});
 		})
 	);
 	row.appendChild(
 		btn("qn-btn-danger qn-btn-sm", t("settings.clearProgress"), () => {
-			if (confirm(t("settings.clearProgressConfirm"))) {
+			confirmDialog(plugin.app, t("settings.clearProgressConfirm"), () => {
 				plugin.store.data.reviewIds = [];
 				plugin.store.data.weakIds = [];
 				plugin.store.data.sm = {};
@@ -465,7 +458,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 					new Notice(t("settings.progressCleared"));
 					plugin.refresh();
 				});
-			}
+			});
 		})
 	);
 	danger.appendChild(row);

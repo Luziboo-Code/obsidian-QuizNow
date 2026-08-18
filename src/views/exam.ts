@@ -43,19 +43,17 @@ function renderConfig(container: HTMLElement, plugin: QuizNowApi): void {
 	card.appendChild(el("div", "qn-subtitle", t("exam.subtitle")));
 
 	// 出题范围
-	const originSel = el("select", "qn-select") as HTMLSelectElement;
-	const optBank = document.createElement("option");
+	const originSel = el("select", "qn-select");
+	const optBank = el("option", "", t("exam.origin.bank"));
 	optBank.value = "bank";
-	optBank.textContent = t("exam.origin.bank");
-	const optWeak = document.createElement("option");
+	const optWeak = el("option", "", t("exam.origin.weak"));
 	optWeak.value = "weak";
-	optWeak.textContent = t("exam.origin.weak");
 	originSel.appendChild(optBank);
 	originSel.appendChild(optWeak);
 	card.appendChild(field(t("exam.origin"), originSel));
 
 	// 数量
-	const countInput = el("input", "qn-input") as HTMLInputElement;
+	const countInput = el("input", "qn-input");
 	countInput.type = "number";
 	countInput.min = "1";
 	countInput.max = "100";
@@ -63,7 +61,7 @@ function renderConfig(container: HTMLElement, plugin: QuizNowApi): void {
 	card.appendChild(field(t("exam.count"), countInput));
 
 	// 试卷名
-	const nameInput = el("input", "qn-input") as HTMLInputElement;
+	const nameInput = el("input", "qn-input");
 	nameInput.type = "text";
 	nameInput.placeholder = t("exam.namePlaceholder");
 	card.appendChild(field(t("exam.name"), nameInput));
@@ -88,7 +86,7 @@ function renderConfig(container: HTMLElement, plugin: QuizNowApi): void {
 	card.appendChild(field(t("exam.types"), chipsWrap));
 
 	const startBtn = btn("qn-btn-primary qn-btn-block", t("exam.generate"), () => {
-		const origin = (originSel as HTMLSelectElement).value as "bank" | "weak";
+		const origin = originSel.value as "bank" | "weak";
 		const count = Math.max(1, parseInt(countInput.value, 10) || 10);
 		const activeTypes = TYPE_KEYS.filter((type) => chosen[type]);
 		if (activeTypes.length === 0) {
@@ -159,11 +157,7 @@ function renderAnswering(
 
 	// 顶栏
 	const top = el("div", "qn-card");
-	const topRow = el("div", "");
-	topRow.style.display = "flex";
-	topRow.style.alignItems = "center";
-	topRow.style.gap = "8px";
-	topRow.style.justifyContent = "space-between";
+	const topRow = el("div", "qn-flex-between");
 	const nameEl = el("div", "qn-paper-name", session.name);
 	topRow.appendChild(nameEl);
 	const exitBtn = el("button", "qn-btn qn-btn-sm", t("exam.end"));
@@ -309,7 +303,7 @@ function buildAnswerControl(
 			break;
 		}
 		case "fill": {
-			const input = el("input", "qn-input") as HTMLInputElement;
+			const input = el("input", "qn-input");
 			input.type = "text";
 			input.placeholder = t("exam.fillPlaceholder");
 			input.addEventListener("input", () => {
@@ -432,11 +426,8 @@ function renderSummary(
 	title.appendChild(el("span", "", t("exam.done")));
 	card.appendChild(title);
 
-	const scoreWrap = el("div", "");
-	scoreWrap.style.textAlign = "center";
-	scoreWrap.style.padding = "16px 0";
-	const scoreNum = el("div", "qn-paper-score", String(rec.score));
-	scoreNum.style.fontSize = "44px";
+	const scoreWrap = el("div", "qn-text-center");
+	const scoreNum = el("div", "qn-paper-score qn-score-lg", String(rec.score));
 	scoreNum.appendChild(el("small", "", t("common.points")));
 	scoreWrap.appendChild(scoreNum);
 	scoreWrap.appendChild(

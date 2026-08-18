@@ -42,7 +42,7 @@ export function generateFromNote(markdown: string, sourceName: string): Question
 		while ((m = re.exec(line)) !== null) {
 			const term = m[1].trim();
 			if (term.length < 2 || term.length > 40) continue;
-			if (/[|`*_#\[\]]/.test(term)) continue;
+			if (/[*_#|`[\]]/.test(term)) continue;
 			boldTerms.push({ term, sentence: line.trim() });
 		}
 	}

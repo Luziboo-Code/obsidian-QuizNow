@@ -95,11 +95,13 @@ async function chatCompletion(
 		body: JSON.stringify(body),
 	});
 	if (res.status < 200 || res.status >= 300) {
-		const detail =
-			(res.json && res.json.error && res.json.error.message) || res.text || "";
+		const errJson = res.json as { error?: { message?: string } } | null;
+		const detail = errJson?.error?.message || res.text || "";
 		throw new Error(t("ai.httpFail", { status: res.status, detail }));
 	}
-	const data = res.json;
+	const data = res.json as {
+		choices?: { message?: { content?: string } }[];
+	} | null;
 	const content: string | undefined =
 		data?.choices?.[0]?.message?.content;
 	if (!content) throw new Error(t("ai.empty"));

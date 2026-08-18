@@ -36,8 +36,7 @@ export class GenerationConfigModal extends Modal {
 		contentEl.addClass("qn-view");
 		contentEl.empty();
 
-		const wrap = el("div", "qn-content");
-		wrap.style.padding = "14px";
+		const wrap = el("div", "qn-content qn-modal-body");
 		contentEl.appendChild(wrap);
 
 		const title = el("div", "qn-title", t("genConfig.title"));
@@ -47,7 +46,7 @@ export class GenerationConfigModal extends Modal {
 		const aiAvailable = s.aiEnabled && !!s.aiApiKey;
 
 		// 题目数量
-		const countInput = el("input", "qn-input") as HTMLInputElement;
+		const countInput = el("input", "qn-input");
 		countInput.type = "number";
 		countInput.min = "1";
 		countInput.max = "50";
@@ -78,7 +77,7 @@ export class GenerationConfigModal extends Modal {
 		wrap.appendChild(typeField);
 
 		// 是否使用 AI
-		const useAiToggle = el("input", "") as HTMLInputElement;
+		const useAiToggle = el("input");
 		useAiToggle.type = "checkbox";
 		useAiToggle.checked = aiAvailable;
 		useAiToggle.disabled = !aiAvailable;
@@ -137,8 +136,7 @@ export class GenerationModal extends Modal {
 		contentEl.addClass("qn-view");
 		contentEl.empty();
 
-		const wrap = el("div", "qn-content");
-		wrap.style.padding = "14px";
+		const wrap = el("div", "qn-content qn-modal-body");
 		contentEl.appendChild(wrap);
 
 		const title = el("div", "qn-title", t("gen.title", { n: this.questions.length }));

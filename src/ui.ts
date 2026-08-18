@@ -1,17 +1,44 @@
-import { setIcon } from "obsidian";
+import { Modal, setIcon, type App } from "obsidian";
 import type { QuestionType } from "./types";
 import { t } from "./i18n";
 
-/** 创建元素 */
+/** 创建元素（使用 Obsidian 的 createEl 助手） */
 export function el<K extends keyof HTMLElementTagNameMap>(
 	tag: K,
 	cls = "",
 	text = ""
 ): HTMLElementTagNameMap[K] {
-	const node = document.createElement(tag);
-	if (cls) node.className = cls;
-	if (text) node.textContent = text;
-	return node;
+	return document.body.createEl(tag, {
+		cls: cls || undefined,
+		text: text || undefined,
+	});
+}
+
+/** 确认弹窗（替代 window.confirm，样式与 Obsidian 一致） */
+export function confirmDialog(
+	app: App,
+	message: string,
+	onConfirm: () => void,
+	title?: string
+): void {
+	const modal = new Modal(app);
+	modal.titleEl.setText(title ?? t("modal.confirmTitle"));
+	modal.contentEl.createEl("p", { text: message });
+	const row = modal.contentEl.createDiv({ cls: "qn-btn-row" });
+	const ok = row.createEl("button", {
+		text: t("modal.confirmOk"),
+		cls: "mod-cta",
+	});
+	ok.addEventListener("click", () => {
+		modal.close();
+		onConfirm();
+	});
+	const cancel = row.createEl("button", {
+		text: t("gen.cancel"),
+		cls: "mod-cta",
+	});
+	cancel.addEventListener("click", () => modal.close());
+	modal.open();
 }
 
 /** 清空容器 */

@@ -860,6 +860,42 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	gap: 10px;
 }
 
+/* ---------- 布局工具类（替代内联 style） ---------- */
+.qn-modal-body {
+	padding: 14px;
+}
+
+.qn-flex {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.qn-flex-between {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.qn-text-center {
+	text-align: center;
+	padding: 16px 0;
+}
+
+.qn-score-lg {
+	font-size: 44px;
+}
+
+.qn-score-md {
+	font-size: 20px;
+	min-width: auto;
+}
+
+.qn-ml-auto {
+	margin-left: auto;
+}
+
 .qn-check-row {
 	display: flex;
 	align-items: center;

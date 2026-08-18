@@ -12,6 +12,18 @@
 
 ---
 
+> **QuizNow** is a clean, modern, lightweight Obsidian plugin that completes the full
+> **Learn → Exam → Review → Master** loop inside your vault. Generate exam questions
+> from the note you are reading with one click (single / multiple choice,
+> fill-in-the-blank, true-false), track wrong answers with the **SM-2 spaced
+> repetition** algorithm, and focus on the knowledge points you keep missing.
+> The UI supports **简体中文 / English / 日本語 / 한국어**, the question bank lives in
+> a single-file JSON database (hidden from the file explorer), and everything can be
+> backed up and restored with one click. See [README.en.md](README.en.md) for the full
+> English documentation.
+
+---
+
 > **QuizNow** 是一个简洁、现代、轻量的 Obsidian 插件，帮助你在库内完成
 > **「学习 → 考试 → 复习 → 巩固」** 的完整闭环：
 > 从正在阅读的笔记生成试题 → 考试作答 → 错题自动进入 SM-2 间隔复习 →
