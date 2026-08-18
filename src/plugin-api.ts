@@ -14,6 +14,8 @@ export interface QuizNowApi {
 	lastExamRecord: ExamRecord | null;
 	lastExamSession: ExamSession | null;
 	refresh(): void;
+	/** 按当前语言重注册命令（force 时忽略语言检测强制重注册） */
+	refreshCommands?(force?: boolean): void;
 	openTab(tab: TabName): void;
 	startSession(session: ExamSession): void;
 	/** 从笔记生成试题的统一入口（按设置决定直接生成或弹配置窗） */

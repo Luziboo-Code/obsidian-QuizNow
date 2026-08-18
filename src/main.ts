@@ -41,7 +41,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		});
 
 		this.registerCommands();
-		this.refreshCommandsIfLangChanged(true);
+		this.refreshCommands(true);
 
 		// 题库数据库文件变化时自动重新同步
 		const handler = (file: TAbstractFile) => {
@@ -97,8 +97,8 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		});
 	}
 
-	/** 语言变化时移除旧命令并用新语言重注册（命令 id 不变，快捷键绑定保留） */
-	private refreshCommandsIfLangChanged(force = false): void {
+	/** 语言变化（或强制）时移除旧命令并用新语言重注册（命令 id 不变，快捷键绑定保留） */
+	refreshCommands(force = false): void {
 		const lang = getLang();
 		if (!force && this.cmdLang === lang) return;
 		this.cmdLang = lang;
@@ -152,7 +152,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 
 	refresh(): void {
 		// 语言切换后同步更新命令名
-		this.refreshCommandsIfLangChanged();
+		this.refreshCommands();
 		this.view?.render();
 	}
 

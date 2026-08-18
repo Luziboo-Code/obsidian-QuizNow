@@ -15,17 +15,10 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	const prompts: CustomPrompt[] = s.customPrompts.map((p) => ({ ...p }));
 	let activePromptId = s.activePromptId;
 
-	// 布局：可滚动内容区 + 底部固定保存栏（保存按钮始终可见）
-	container.addClass("qn-settings");
-	const scrollArea = el("div", "qn-settings-scroll");
-	const saveBar = el("div", "qn-save-bar");
-	container.appendChild(scrollArea);
-	container.appendChild(saveBar);
-
 	const title = el("div", "qn-title");
 	setIcon(title, "settings");
 	title.appendChild(el("span", "", t("settings.title")));
-	scrollArea.appendChild(title);
+	container.appendChild(title);
 
 	const card = el("div", "qn-card qn-fade");
 
@@ -274,37 +267,40 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	};
 	renderPromptsBox();
 
-	// ---- 保存按钮：固定在底部保存栏，随时可点击 ----
+	// ---- 保存按钮：sticky 吸附在底部，滚动设置时始终可见 ----
+	const saveBar = el("div", "qn-save-bar");
 	saveBar.appendChild(
 		btn("qn-btn-primary qn-btn-block", t("settings.save"), () => {
-			const patch: Partial<Settings> = {
-				language: langSel.value as Lang,
-				genMode,
-				bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
-				defaultCount: Math.max(1, parseInt(countInput.value, 10) || 10),
-				scoreMode: scoreSel.value as Settings["scoreMode"],
-				pointsPerQuestion: Math.max(1, parseInt(pointsInput.value, 10) || 10),
-				homePaperLimit: Math.max(0, parseInt(homeLimitInput.value, 10) || 0),
-				sm2InitialEF: Math.max(1.3, parseFloat(efInput.value) || 2.5),
-				sm2MinInterval: Math.max(0, parseInt(minIntervalInput.value, 10) || 1),
-				weakMasteryReps: Math.max(1, parseInt(masteryInput.value, 10) || 2),
-				includeTypes: { ...chosen },
-				aiEnabled: aiToggle.checked,
-				aiBaseUrl: urlInput.value.trim() || "https://api.openai.com/v1",
-				aiApiKey: keyInput.value.trim(),
-				aiModel: modelInput.value.trim() || "gpt-4o-mini",
-				aiCount: Math.min(20, Math.max(1, parseInt(aiCountInput.value, 10) || 5)),
-				aiExplanation: aiExpToggle.checked,
-				customPrompts: prompts,
-				activePromptId,
-			};
-			void plugin.store.updateSettings(patch).then(() => {
-				new Notice(t("settings.saved"));
-				plugin.refresh();
-			});
-		})
-	);
-	scrollArea.appendChild(card);
+				const patch: Partial<Settings> = {
+					language: langSel.value as Lang,
+					genMode,
+					bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
+					defaultCount: Math.max(1, parseInt(countInput.value, 10) || 10),
+					scoreMode: scoreSel.value as Settings["scoreMode"],
+					pointsPerQuestion: Math.max(1, parseInt(pointsInput.value, 10) || 10),
+					homePaperLimit: Math.max(0, parseInt(homeLimitInput.value, 10) || 0),
+					sm2InitialEF: Math.max(1.3, parseFloat(efInput.value) || 2.5),
+					sm2MinInterval: Math.max(0, parseInt(minIntervalInput.value, 10) || 1),
+					weakMasteryReps: Math.max(1, parseInt(masteryInput.value, 10) || 2),
+					includeTypes: { ...chosen },
+					aiEnabled: aiToggle.checked,
+					aiBaseUrl: urlInput.value.trim() || "https://api.openai.com/v1",
+					aiApiKey: keyInput.value.trim(),
+					aiModel: modelInput.value.trim() || "gpt-4o-mini",
+					aiCount: Math.min(20, Math.max(1, parseInt(aiCountInput.value, 10) || 5)),
+					aiExplanation: aiExpToggle.checked,
+					customPrompts: prompts,
+					activePromptId,
+				};
+				void plugin.store.updateSettings(patch).then(() => {
+					new Notice(t("settings.saved"));
+					// 立即生效：刷新界面 + 重注册命令（语言切换后命令名立即更新）
+					plugin.refreshCommands?.(true);
+					plugin.refresh();
+				});
+			})
+		);
+	container.appendChild(card);
 
 	// ---- 数据备份 ----
 	const backupCard = el("div", "qn-card qn-fade");
@@ -374,7 +370,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		}
 	};
 	void renderBackups();
-	scrollArea.appendChild(backupCard);
+	container.appendChild(backupCard);
 
 	// ---- 危险区 ----
 	const danger = el("div", "qn-card qn-fade");
@@ -406,5 +402,8 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		})
 	);
 	danger.appendChild(row);
-	scrollArea.appendChild(danger);
+	container.appendChild(danger);
+
+	// 保存按钮栏放在最后，sticky 吸附在底部始终可见
+	container.appendChild(saveBar);
 }
