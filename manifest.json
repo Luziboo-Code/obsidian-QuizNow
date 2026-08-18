@@ -6,5 +6,6 @@
 	"description": "Generate exam questions from your notes in one click. Based on current notes, quickly generate exam questions, supporting single choice, multiple choice, fill-in-the-blank, and true/false questions. SM-2 spaced repetition and weak point management.",
 	"author": "Luziboo",
 	"authorUrl": "",
-	"isDesktopOnly": false
+	"isDesktopOnly": false,
+	"fundingUrl": "https://github.com/Luziboo-Code/obsidian-QuizNow"
 }

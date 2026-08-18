@@ -82,6 +82,8 @@ export interface Settings {
 	bankFile: string;
 	/** 旧版题库文件夹（仅用于一次性迁移旧数据，不再使用） */
 	bankFolder?: string;
+	/** 从笔记生成试题的方式：direct = 直接按已保存配置生成；dialog = 弹出配置弹窗 */
+	genMode: "direct" | "dialog";
 	/** 默认出题数量 */
 	defaultCount: number;
 	/** 参与抽题的题型 */
@@ -115,9 +117,10 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
 	language: "zh",
-	// 默认存于 .obsidian 隐藏目录，不会显示在文件树中
-	bankFile: ".obsidian/quiznow/题库.json",
+	// 默认存于 .obsidian 隐藏目录，不会显示在文件树中；使用英文文件名
+	bankFile: ".obsidian/quiznow/questions.json",
 	bankFolder: "QuizNow/题库",
+	genMode: "direct",
 	defaultCount: 10,
 	includeTypes: {
 		single: true,

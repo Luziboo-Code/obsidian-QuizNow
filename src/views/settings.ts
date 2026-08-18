@@ -15,10 +15,17 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	const prompts: CustomPrompt[] = s.customPrompts.map((p) => ({ ...p }));
 	let activePromptId = s.activePromptId;
 
+	// 布局：可滚动内容区 + 底部固定保存栏（保存按钮始终可见）
+	container.addClass("qn-settings");
+	const scrollArea = el("div", "qn-settings-scroll");
+	const saveBar = el("div", "qn-save-bar");
+	container.appendChild(scrollArea);
+	container.appendChild(saveBar);
+
 	const title = el("div", "qn-title");
 	setIcon(title, "settings");
 	title.appendChild(el("span", "", t("settings.title")));
-	container.appendChild(title);
+	scrollArea.appendChild(title);
 
 	const card = el("div", "qn-card qn-fade");
 
@@ -77,6 +84,30 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	homeLimitInput.min = "0";
 	homeLimitInput.value = String(s.homePaperLimit || 0);
 	card.appendChild(field(t("settings.homeLimit"), homeLimitInput, t("settings.homeLimitHelp")));
+
+	// 生成方式：直接生成 / 弹出配置弹窗
+	const genModeWrap = el("div", "qn-chips");
+	let genMode: "direct" | "dialog" = s.genMode || "direct";
+	const mkGenChip = (value: "direct" | "dialog", label: string) => {
+		const chip = el(
+			"button",
+			"qn-chip" + (genMode === value ? " active" : ""),
+			label
+		);
+		chip.addEventListener("click", () => {
+			genMode = value;
+			genModeWrap
+				.querySelectorAll(".qn-chip")
+				.forEach((n) => n.classList.remove("active"));
+			chip.classList.add("active");
+		});
+		return chip;
+	};
+	genModeWrap.appendChild(mkGenChip("direct", t("settings.genMode.direct")));
+	genModeWrap.appendChild(mkGenChip("dialog", t("settings.genMode.dialog")));
+	card.appendChild(
+		field(t("settings.genMode"), genModeWrap, t("settings.genModeHint"))
+	);
 
 	// ---- 复习 ----
 	card.appendChild(el("div", "qn-divider"));
@@ -243,13 +274,13 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	};
 	renderPromptsBox();
 
-	// ---- 保存 ----
-	card.appendChild(el("div", "qn-divider"));
-	card.appendChild(
+	// ---- 保存按钮：固定在底部保存栏，随时可点击 ----
+	saveBar.appendChild(
 		btn("qn-btn-primary qn-btn-block", t("settings.save"), () => {
 			const patch: Partial<Settings> = {
 				language: langSel.value as Lang,
-				bankFile: bankInput.value.trim() || "QuizNow/题库.json",
+				genMode,
+				bankFile: bankInput.value.trim() || ".obsidian/quiznow/questions.json",
 				defaultCount: Math.max(1, parseInt(countInput.value, 10) || 10),
 				scoreMode: scoreSel.value as Settings["scoreMode"],
 				pointsPerQuestion: Math.max(1, parseInt(pointsInput.value, 10) || 10),
@@ -273,7 +304,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 			});
 		})
 	);
-	container.appendChild(card);
+	scrollArea.appendChild(card);
 
 	// ---- 数据备份 ----
 	const backupCard = el("div", "qn-card qn-fade");
@@ -343,7 +374,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		}
 	};
 	void renderBackups();
-	container.appendChild(backupCard);
+	scrollArea.appendChild(backupCard);
 
 	// ---- 危险区 ----
 	const danger = el("div", "qn-card qn-fade");
@@ -375,5 +406,5 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		})
 	);
 	danger.appendChild(row);
-	container.appendChild(danger);
+	scrollArea.appendChild(danger);
 }

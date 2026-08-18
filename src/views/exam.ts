@@ -133,7 +133,7 @@ function renderConfig(container: HTMLElement, plugin: QuizNowApi): void {
 
 	// 从当前笔记生成
 	const noteBtn = btn("qn-btn qn-btn-block", t("exam.fromNote"), () => {
-		void plugin.generateFromCurrentNote();
+		plugin.startGenerateFlow();
 	});
 	card.appendChild(noteBtn);
 	card.appendChild(el("div", "qn-note", t("exam.fromNoteHint")));

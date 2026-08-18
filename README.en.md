@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎓 QuizNow — Exam & Review Plugin for Obsidian
+#  QuizNow — Exam & Review Plugin for Obsidian
 
 ![UI](user_interface_imgs/interface_05.png)
 
@@ -17,13 +17,13 @@
 > generate questions from the note you're reading → take exams → wrong answers flow into
 > SM-2 spaced repetition → knowledge points you keep missing land in **Weak Spots** for focused practice.
 
-- ⚡ Built with vanilla DOM — no runtime frameworks, extremely low resource usage
-- 🌍 UI in **简体中文 / English / 日本語 / 한국어** (switchable in Settings)
-- 🗄️ Question bank stored in a **single-file JSON database** — no more scattered files, with one-click **backup/restore**
+-  Built with vanilla DOM — no runtime frameworks, extremely low resource usage
+-  UI in **简体中文 / English / 日本語 / 한국어** (switchable in Settings)
+-  Question bank stored in a **single-file JSON database** — no more scattered files, with one-click **backup/restore**
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 
 - [Features](#-features)
 - [Quick Start](#-quick-start)
@@ -41,28 +41,28 @@
 
 ---
 
-## ✨ Features
+##  Features
 
 | Section | Description |
 | --- | --- |
-| 🏠 **Home** | Row 1: stat cards for question count / wrong answers / due reviews / exam papers; Row 2: **best score** card for each exam paper (number shown configurable) |
-| 📝 **Exam** | Flashcard-style answering; single-choice & true-false **submit on click**, multiple-choice & fill-in-the-blank submit manually; configurable question count and types; after generation choose **"Answer Now"** or **"Add to Bank"**; wrong answers are auto-saved to the bank and review queue |
-| 🔄 **Review** | Wrong answers from exams collected automatically; re-answer with the **SM-2 spaced repetition** algorithm (self-rate: Again / Hard / Good / Easy); **answering wrong again moves the question to Weak Spots** |
-| 🎯 **Weak Spots** | Knowledge points you keep missing, managed in one place; one-click **explanation generation** (AI or extracted from your note) to help memorization; SM-2-based re-exams; consecutive correct answers graduate the point automatically |
-| ⚙️ **Settings** | Bank database path, default question count, scoring mode, question types, papers shown on home, SM-2 parameters, weak-spot mastery threshold, AI endpoint, **custom generation prompts**, **UI language**, **backup/restore** and more |
+|  **Home** | Row 1: stat cards for question count / wrong answers / due reviews / exam papers; Row 2: **best score** card for each exam paper (number shown configurable) |
+|  **Exam** | Flashcard-style answering; single-choice & true-false **submit on click**, multiple-choice & fill-in-the-blank submit manually; configurable question count and types; after generation choose **"Answer Now"** or **"Add to Bank"**; wrong answers are auto-saved to the bank and review queue |
+|  **Review** | Wrong answers from exams collected automatically; re-answer with the **SM-2 spaced repetition** algorithm (self-rate: Again / Hard / Good / Easy); **answering wrong again moves the question to Weak Spots** |
+|  **Weak Spots** | Knowledge points you keep missing, managed in one place; one-click **explanation generation** (AI or extracted from your note) to help memorization; SM-2-based re-exams; consecutive correct answers graduate the point automatically |
+|  **Settings** | Bank database path, default question count, scoring mode, question types, papers shown on home, SM-2 parameters, weak-spot mastery threshold, AI endpoint, **custom generation prompts**, **UI language**, **backup/restore** and more |
 
 **Highlights**
 
-- 📄 **One-click generation from the document header** — open any note and click the 📋 button in the top-right corner of its title bar
-- 🗄️ **Single-file database, hidden from the file explorer** — all questions live in `.obsidian/quiznow/题库.json` (configurable), synced with your vault and easy to back up
-- 💾 **One-click backup/restore** — export everything (bank + records + memory progress + settings) to a single JSON file
-- 🤖 **Optional AI enhancement** — plug in any OpenAI-compatible API for AI question generation and explanations; built-in zero-cost generation when not configured
-- 🔧 **Custom generation prompts** — manage multiple AI prompts and switch between them anytime
-- 🧠 **SM-2 science-backed review** — the classic spaced-repetition algorithm schedules each question's next review
+-  **One-click generation from the document header** — open any note and click the 📋 button in the top-right corner of its title bar
+-  **Single-file database, hidden from the file explorer** — all questions live in `.obsidian/quiznow/questions.json` (configurable), synced with your vault and easy to back up
+-  **One-click backup/restore** — export everything (bank + records + memory progress + settings) to a single JSON file
+-  **Optional AI enhancement** — plug in any OpenAI-compatible API for AI question generation and explanations; built-in zero-cost generation when not configured
+-  **Custom generation prompts** — manage multiple AI prompts and switch between them anytime
+-  **SM-2 science-backed review** — the classic spaced-repetition algorithm schedules each question's next review
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 1. **Install**: copy `main.js`, `manifest.json`, `styles.css` into
    `<your-vault>/.obsidian/plugins/obsidian-quiznow/` (create it if missing);
@@ -70,23 +70,23 @@
 3. **Open**: click the 🎓 icon in the left ribbon, or run the command
    `QuizNow: Open QuizNow panel` (opens in a **new tab in the main content area**, not the sidebar).
 
-> On first launch a sample bank database is created (`.obsidian/quiznow/题库.json`
+> On first launch a sample bank database is created (`.obsidian/quiznow/questions.json`
 > by default — inside Obsidian's hidden folder, so it **never appears in the file
 > explorer**). Browse questions via the Home stat cards.
 
 ---
 
-## 📖 Usage Guide
+##  Usage Guide
 
 ### 1. Generate Questions from a Note
 
 1. Open a note — mark key terms in **bold** or use `key: value` lines to
    significantly improve built-in generation quality;
-2. Click the **📋 button in the note's title bar (top-right)**, or run
+2. Click the ** button in the note's title bar (top-right)**, or run
    `QuizNow: Generate questions from current note`;
 3. A "Generating exam questions…" notice appears; when done, a preview dialog shows:
    - **Answer Now** → start the exam immediately;
-   - **Add to Bank** → all questions are written to the bank database `QuizNow/题库.json`.
+   - **Add to Bank** → all questions are written to the bank database `.obsidian/quiznow/questions.json`.
 
 ### 2. Take an Exam
 
@@ -109,23 +109,23 @@
 
 - Open the **Weak Spots** tab and click **✨ Generate Explanation** on any point to
   aid understanding and memorization;
-- Click **🎯 Weak Spot Exam** to re-answer; consecutive correct answers
+- Click ** Weak Spot Exam** to re-answer; consecutive correct answers
   (default 2, configurable) graduate the point out of Weak Spots.
 
 ---
 
-## ⌨️ Commands
+##  Commands
 
 | Command | Description |
 | --- | --- |
 | `QuizNow: Open QuizNow panel` | Open the main panel (new tab) |
 | `QuizNow: Quick exam (random from bank)` | Start a random exam in one click |
 | `QuizNow: Generate questions from current note` | Generate questions from the active note |
-| 📋 Title-bar button | Same as above (top-right of the note) |
+|  Title-bar button | Same as above (top-right of the note) |
 
 ---
 
-## 🧩 Question Types & Answering
+##  Question Types & Answering
 
 | Type | How to answer | Grading |
 | --- | --- | --- |
@@ -136,9 +136,9 @@
 
 ---
 
-## 🗄️ Question Bank (Single-File Database · Hidden Folder)
+##  Question Bank (Single-File Database · Hidden Folder)
 
-The bank is stored in **one JSON database file** (default `.obsidian/quiznow/题库.json`,
+The bank is stored in **one JSON database file** (default `.obsidian/quiznow/questions.json`,
 path configurable in Settings). All questions live in a single file — no scattered
 files — and it lives inside Obsidian's hidden `.obsidian` folder, so it **does not
 appear in the file explorer**.
@@ -170,7 +170,7 @@ Database structure:
 
 ---
 
-## 💾 Backup & Restore
+##  Backup & Restore
 
 In "Settings → Data Backup":
 
@@ -183,7 +183,7 @@ In "Settings → Data Backup":
 
 ---
 
-## 🤖 AI Generation (Optional)
+##  AI Generation (Optional)
 
 Fill in an OpenAI-compatible endpoint in Settings (OpenAI, DeepSeek, Qwen, local Ollama, etc.):
 
@@ -203,7 +203,7 @@ placeholders: `{count}` (number of questions) and `{types}` (enabled question ty
 
 ---
 
-## 🌍 Language Support
+##  Language Support
 
 Choose **简体中文 / English / 日本語 / 한국어** in "Settings → Language".
 After saving, the entire UI — including command names, notices and AI default
@@ -233,7 +233,7 @@ the new device, install the plugin there, then Settings → Data Backup → Rest
 
 **Q: Where is the data stored? Will uninstalling the plugin delete it?**
 A: Data lives in the plugin's `data.json` and the bank database file
-(`.obsidian/quiznow/题库.json` by default — inside Obsidian's hidden folder, so it
+(`.obsidian/quiznow/questions.json` by default — inside Obsidian's hidden folder, so it
 **does not appear in the file explorer**). **Uninstalling the plugin does not delete
 these files** — they are re-read automatically after reinstallation.
 
@@ -261,7 +261,7 @@ npm run build      # type-check + production build
 
 ---
 
-## 🔒 Data & Privacy
+##  Data & Privacy
 
 - All data stays **local to your vault** (plugin `data.json` + bank database file in
   `.obsidian/quiznow/`, hidden from the file explorer); nothing is uploaded anywhere;
@@ -271,9 +271,9 @@ npm run build      # type-check + production build
 
 ---
 
-## 📄 License
+##  License
 
-[MIT](LICENSE) © QuizNow
+[MIT](LICENSE) © Luziboo
 
 ---
 

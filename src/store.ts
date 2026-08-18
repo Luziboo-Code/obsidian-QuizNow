@@ -57,6 +57,11 @@ export class QuizStore {
 		};
 		setLang(this.settings.language);
 
+		// 旧版默认路径（中文文件名 .obsidian/quiznow/题库.json）自动切换到英文新默认
+		if (this.settings.bankFile === ".obsidian/quiznow/题库.json") {
+			this.settings.bankFile = DEFAULT_SETTINGS.bankFile;
+		}
+
 		// 旧版数据迁移：优先迁移可见目录下的 JSON 数据库，再迁移更早的 .md 文件夹版
 		await this.migrateVisibleBankIfNeeded();
 		await this.migrateLegacyBankIfNeeded();
@@ -158,11 +163,21 @@ export class QuizStore {
 	private async migrateVisibleBankIfNeeded(): Promise<void> {
 		const adapter = this.plugin.app.vault.adapter;
 		const target = this.bankPath();
-		const oldPath = normalizePath("QuizNow/题库.json");
-		if (target === oldPath) return; // 用户自定义路径仍为旧位置，不迁移
+		// 旧位置候选：早期可见目录版本、以及旧默认中文文件名的隐藏版本
+		const candidates = [
+			normalizePath("QuizNow/题库.json"),
+			normalizePath(".obsidian/quiznow/题库.json"),
+		].filter((p) => p !== target);
+		let oldPath: string | null = null;
+		for (const c of candidates) {
+			if (await adapter.exists(c)) {
+				oldPath = c;
+				break;
+			}
+		}
 		if (await adapter.exists(target)) return; // 新位置已有数据
 		try {
-			if (!(await adapter.exists(oldPath))) return; // 无旧数据
+			if (!oldPath) return; // 无旧数据
 			// 1. 迁移题库数据库
 			await this.ensureBankFile();
 			const text = await adapter.read(oldPath);

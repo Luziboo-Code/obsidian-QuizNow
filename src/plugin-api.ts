@@ -16,6 +16,12 @@ export interface QuizNowApi {
 	refresh(): void;
 	openTab(tab: TabName): void;
 	startSession(session: ExamSession): void;
-	generateFromCurrentNote(): Promise<void>;
+	/** 从笔记生成试题的统一入口（按设置决定直接生成或弹配置窗） */
+	startGenerateFlow(): void;
+	generateFromCurrentNote(opts?: {
+		count?: number;
+		includeTypes?: import("./types").QuestionType[];
+		useAi?: boolean;
+	}): Promise<void>;
 	getNoteContentFor(source?: string): Promise<string | undefined>;
 }

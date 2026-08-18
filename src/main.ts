@@ -6,12 +6,12 @@ import {
 	type TAbstractFile,
 } from "obsidian";
 import type { QuizNowApi, TabName } from "./plugin-api";
-import type { ExamRecord, ExamSession, Question, QuestionType, Settings } from "./types";
+import type { ExamRecord, ExamSession, Lang, Question, QuestionType, Settings } from "./types";
 import { newId, shuffleOptions } from "./question";
 import { generateFromNote } from "./generator";
 import { aiGenerateQuestions, defaultGeneratePrompt } from "./ai";
 import { QuizStore } from "./store";
-import { GenerationModal } from "./generate-modal";
+import { GenerationModal, GenerationConfigModal } from "./generate-modal";
 import { QuizNowView, VIEW_TYPE } from "./views/main";
 import { t, getLang } from "./i18n";
 
@@ -24,6 +24,8 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 	lastExamSession: ExamSession | null = null;
 
 	private syncTimer: number | null = null;
+	/** 上次注册命令时的语言，用于语言切换后重注册 */
+	private cmdLang: Lang | null = null;
 
 	async onload(): Promise<void> {
 		this.store = new QuizStore(this);
@@ -38,28 +40,8 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 			this.openTab("home");
 		});
 
-		this.addCommand({
-			id: "quiznow-open",
-			name: t("cmd.open"),
-			callback: () => this.openTab("home"),
-		});
-
-		this.addCommand({
-			id: "quiznow-quick-exam",
-			name: t("cmd.quickExam"),
-			callback: () => this.startQuickExam(),
-		});
-
-		this.addCommand({
-			id: "quiznow-generate-from-note",
-			name: t("cmd.genNote"),
-			checkCallback: (checking) => {
-				const file = this.app.workspace.getActiveFile();
-				if (!file) return false;
-				if (!checking) void this.generateFromCurrentNote();
-				return true;
-			},
-		});
+		this.registerCommands();
+		this.refreshCommandsIfLangChanged(true);
 
 		// 题库数据库文件变化时自动重新同步
 		const handler = (file: TAbstractFile) => {
@@ -91,6 +73,49 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		if (this.syncTimer) window.clearTimeout(this.syncTimer);
 	}
 
+	/** 注册插件命令（语言切换后重新调用以更新命令名） */
+	private registerCommands(): void {
+		this.addCommand({
+			id: "quiznow-open",
+			name: t("cmd.open"),
+			callback: () => this.openTab("home"),
+		});
+		this.addCommand({
+			id: "quiznow-quick-exam",
+			name: t("cmd.quickExam"),
+			callback: () => this.startQuickExam(),
+		});
+		this.addCommand({
+			id: "quiznow-generate-from-note",
+			name: t("cmd.genNote"),
+			checkCallback: (checking) => {
+				const file = this.app.workspace.getActiveFile();
+				if (!file) return false;
+				if (!checking) this.startGenerateFlow();
+				return true;
+			},
+		});
+	}
+
+	/** 语言变化时移除旧命令并用新语言重注册（命令 id 不变，快捷键绑定保留） */
+	private refreshCommandsIfLangChanged(force = false): void {
+		const lang = getLang();
+		if (!force && this.cmdLang === lang) return;
+		this.cmdLang = lang;
+		for (const id of [
+			"quiznow-open",
+			"quiznow-quick-exam",
+			"quiznow-generate-from-note",
+		]) {
+			try {
+				this.removeCommand(id);
+			} catch {
+				// 忽略未注册的 id
+			}
+		}
+		this.registerCommands();
+	}
+
 	/**
 	 * 在打开的 Markdown 文档标题栏右上角（.view-actions）注入
 	 * 「基于当前文档生成试卷」按钮；文档或布局切换时自动更新。
@@ -110,7 +135,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 			setIcon(btn, "list-checks");
 			btn.addEventListener("click", (e) => {
 				e.stopPropagation();
-				void this.generateFromCurrentNote();
+				this.startGenerateFlow();
 			});
 			actions.appendChild(btn);
 		}
@@ -126,6 +151,8 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 	// ---------- QuizNowApi ----------
 
 	refresh(): void {
+		// 语言切换后同步更新命令名
+		this.refreshCommandsIfLangChanged();
 		this.view?.render();
 	}
 
@@ -186,8 +213,26 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		});
 	}
 
-	/** 基于当前打开的笔记生成试题（AI 优先，失败回退启发式） */
-	async generateFromCurrentNote(): Promise<void> {
+	/**
+	 * 从笔记生成试题的统一入口：
+	 * 设置「生成方式」为弹窗时，先弹出配置弹窗，否则直接按已保存配置生成。
+	 */
+	startGenerateFlow(): void {
+		if (this.store.settings.genMode === "dialog") {
+			new GenerationConfigModal(this.app, this, (config) => {
+				void this.generateFromCurrentNote(config);
+			}).open();
+		} else {
+			void this.generateFromCurrentNote();
+		}
+	}
+
+	/** 基于当前打开的笔记生成试题（AI 优先，失败回退启发式；可传覆盖配置） */
+	async generateFromCurrentNote(opts?: {
+		count?: number;
+		includeTypes?: QuestionType[];
+		useAi?: boolean;
+	}): Promise<void> {
 		const file = this.app.workspace.getActiveFile();
 		if (!file) {
 			new Notice(t("notice.noFile"));
@@ -198,9 +243,13 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		try {
 			const text = await this.app.vault.read(file);
 			const s = this.store.settings;
+			const useAi = opts?.useAi ?? (s.aiEnabled && !!s.aiApiKey);
+			const count = opts?.count ?? (s.aiCount || 5);
+			const includeTypes =
+				opts?.includeTypes ?? TYPE_KEYS.filter((tt) => s.includeTypes[tt]);
 			let questions: Question[] = [];
 
-			if (s.aiEnabled && s.aiApiKey) {
+			if (useAi) {
 				try {
 					questions = await aiGenerateQuestions({
 						baseUrl: s.aiBaseUrl,
@@ -208,8 +257,8 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 						model: s.aiModel,
 						noteContent: text,
 						sourceName: file.basename,
-						count: s.aiCount || 5,
-						includeTypes: TYPE_KEYS.filter((tt) => s.includeTypes[tt]),
+						count,
+						includeTypes,
 						systemPrompt: resolvePrompt(s) ?? defaultGeneratePrompt(getLang()),
 					});
 				} catch (e) {

@@ -79,6 +79,32 @@ body.theme-dark .qn-view {
 	gap: 12px;
 }
 
+/* 设置界面：可滚动内容区 + 底部固定保存栏 */
+.qn-settings {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding: 0 !important;
+}
+
+.qn-settings-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.qn-save-bar {
+	flex-shrink: 0;
+	padding: 10px 14px;
+	border-top: 1px solid var(--background-modifier-border);
+	background: color-mix(in srgb, var(--background-primary) 94%, transparent);
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
 /* ---------- 通用卡片 ---------- */
 .qn-card {
 	background: var(--background-secondary);
