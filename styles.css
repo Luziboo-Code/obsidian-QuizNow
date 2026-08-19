@@ -212,6 +212,10 @@ body.theme-dark .qn-view {
 	box-shadow: var(--qn-shadow-hover);
 }
 
+.qn-paper-card.clickable {
+	cursor: pointer;
+}
+
 .qn-paper-score {
 	font-size: 30px;
 	font-weight: 800;

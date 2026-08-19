@@ -8,7 +8,27 @@ import {
 	questionStatus,
 	type QuestionListItem,
 } from "../list-modal";
-import type { Question } from "../types";
+import type { ExamQuestionSnapshot, Question } from "../types";
+
+/** 组装考试记录视图数据（可按试卷名过滤） */
+function buildRecords(plugin: QuizNowApi, nameFilter?: string) {
+	const questions = plugin.store.data.questions;
+	return plugin.store.data.examRecords
+		.filter((r) => !nameFilter || r.name === nameFilter)
+		.sort((a, b) => b.date - a.date)
+		.map((r) => ({
+			id: r.id,
+			name: r.name,
+			date: r.date,
+			score: r.score,
+			correct: r.correct,
+			total: r.total,
+			wrongQuestions: r.wrongIds
+				.map((id) => questions.find((q) => q.id === id))
+				.filter((q): q is Question => !!q),
+			snapshot: (r.snapshot ?? []) as ExamQuestionSnapshot[],
+		}));
+}
 
 /** 首页：统计 + 各试卷最高分卡片 */
 export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
@@ -68,21 +88,7 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 			value: s.paperCount,
 			icon: "file-text",
 			onClick: () => {
-				const records = [...plugin.store.data.examRecords]
-					.sort((a, b) => b.date - a.date)
-					.map((r) => ({
-						id: r.id,
-						name: r.name,
-						date: r.date,
-						score: r.score,
-						correct: r.correct,
-						total: r.total,
-						wrongQuestions: r.wrongIds
-							.map((id) => questions.find((q) => q.id === id))
-							.filter((q): q is Question => !!q),
-						snapshot: r.snapshot ?? [],
-					}));
-				new ExamHistoryModal(plugin.app, plugin, records).open();
+				new ExamHistoryModal(plugin.app, plugin, buildRecords(plugin)).open();
 			},
 		},
 	];
@@ -107,6 +113,7 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 	title.appendChild(el("span", "", t("home.paperTitle")));
 	section.appendChild(title);
 	section.appendChild(el("div", "qn-note", t("home.paperNote")));
+	section.appendChild(el("div", "qn-note", t("home.paperClickHint")));
 
 	const allPapers = plugin.store.paperCards();
 	const limit = plugin.store.settings.homePaperLimit || 0;
@@ -125,7 +132,7 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 	} else {
 		const list = el("div", "qn-scroll-list");
 		for (const p of papers) {
-			const card = el("div", "qn-paper-card");
+			const card = el("div", "qn-paper-card clickable");
 			const score = el("div", "qn-paper-score", `${p.best}`);
 			score.appendChild(el("small", "", t("common.points")));
 			card.appendChild(score);
@@ -139,6 +146,10 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 				)
 			);
 			card.appendChild(info);
+			// 点击分数卡：查看该试卷的考试记录（含完整题目与逐题作答）
+			card.addEventListener("click", () => {
+				new ExamHistoryModal(plugin.app, plugin, buildRecords(plugin, p.name)).open();
+			});
 			list.appendChild(card);
 		}
 		section.appendChild(list);
