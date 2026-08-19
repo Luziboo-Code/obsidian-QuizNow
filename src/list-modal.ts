@@ -1,7 +1,7 @@
 import { Modal, Notice, setIcon, type App } from "obsidian";
 import type { QuizNowApi } from "./plugin-api";
-import type { Question } from "./types";
-import { answerText, displayContent } from "./question";
+import type { ExamQuestionSnapshot, Question } from "./types";
+import { answerText, displayContent, userAnswerText } from "./question";
 import { isDue } from "./sm2";
 import { el, btn, badge, iconBtn, confirmDialog } from "./ui";
 import { t } from "./i18n";
@@ -127,6 +127,7 @@ export class ExamHistoryModal extends Modal {
 		correct: number;
 		total: number;
 		wrongQuestions: Question[];
+		snapshot: ExamQuestionSnapshot[];
 	}[];
 
 	constructor(
@@ -140,6 +141,7 @@ export class ExamHistoryModal extends Modal {
 			correct: number;
 			total: number;
 			wrongQuestions: Question[];
+			snapshot: ExamQuestionSnapshot[];
 		}[]
 	) {
 		super(app);
@@ -200,7 +202,15 @@ export class ExamHistoryModal extends Modal {
 						})
 					)
 				);
-				if (r.wrongQuestions.length > 0) {
+				// 完整试卷内容（题目快照）：每道题标注答对/答错与你的答案
+				if (r.snapshot && r.snapshot.length > 0) {
+					const paperList = el("div", "");
+					r.snapshot.forEach((s, i) => {
+						paperList.appendChild(renderSnapshotItem(s, i));
+					});
+					card.appendChild(paperList);
+				} else if (r.wrongQuestions.length > 0) {
+					// 旧记录无快照：降级显示错题列表
 					card.appendChild(
 						el("div", "qn-note", t("exam.wrongList", { n: r.wrongQuestions.length }))
 					);
@@ -250,6 +260,38 @@ export class ExamHistoryModal extends Modal {
 	onClose(): void {
 		this.contentEl.empty();
 	}
+}
+
+/** 渲染试卷快照中的一道题（含作答结果与对错标记） */
+function renderSnapshotItem(s: ExamQuestionSnapshot, index: number): HTMLElement {
+	const item = el(
+		"div",
+		"qn-gen-item" + (s.correct ? "" : " qn-item-wrong")
+	);
+	const h = el("div", "qn-question-head");
+	h.appendChild(badge(s.question.type));
+	h.appendChild(el("span", "qn-note", t("exam.qNo", { n: index + 1 })));
+	// 对/错标记
+	const mark = el(
+		"span",
+		"qn-badge " + (s.correct ? "qn-badge-judge" : "qn-badge-multiple") + " qn-ml-auto",
+		s.correct ? t("exam.correct") : t("exam.wrong")
+	);
+	h.appendChild(mark);
+	item.appendChild(h);
+	item.appendChild(
+		el("div", "qn-question-content", displayContent(s.question.content))
+	);
+	const ans = el("div", "qn-gen-answer");
+	ans.appendChild(
+		el("span", "", `${t("exam.yourAnswerLabel")}${userAnswerText(s.question, s.userAnswer)}`)
+	);
+	item.appendChild(ans);
+	const correct = el("div", "qn-gen-answer");
+	correct.appendChild(el("span", "", t("exam.answerLabel")));
+	correct.appendChild(el("b", "", answerText(s.question)));
+	item.appendChild(correct);
+	return item;
 }
 
 /** 根据题目生成复习状态标注 */

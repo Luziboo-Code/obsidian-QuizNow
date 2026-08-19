@@ -188,10 +188,14 @@ function renderAnswering(
 	head.appendChild(
 		el("span", "qn-note", t("exam.qNo", { n: session.index + 1 }))
 	);
-	// 题目来源（灰色小字）
+	// 题目来源（灰色小字，可点击跳转到来源笔记）
 	if (q.source) {
-		const src = el("span", "qn-source", q.source);
+		const src = el("span", "qn-source qn-source-link", q.source);
 		src.setAttribute("title", q.source);
+		src.addEventListener("click", (e) => {
+			e.stopPropagation();
+			void openSourceNote(plugin, q.source);
+		});
 		head.appendChild(src);
 	}
 	card.appendChild(head);
@@ -306,6 +310,8 @@ function buildAnswerControl(
 			const input = el("input", "qn-input");
 			input.type = "text";
 			input.placeholder = t("exam.fillPlaceholder");
+			// 手机端键盘回车键提示（"完成"）
+			input.enterKeyHint = "done";
 			input.addEventListener("input", () => {
 				state.userAnswer = [input.value];
 			});
@@ -517,4 +523,22 @@ function nowStamp(): string {
 	).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(
 		d.getMinutes()
 	).padStart(2, "0")}`;
+}
+
+/** 根据题目来源（笔记名或路径）在新标签页打开对应笔记 */
+async function openSourceNote(
+	plugin: QuizNowApi,
+	source: string | undefined
+): Promise<void> {
+	if (!source) return;
+	const files = plugin.app.vault.getMarkdownFiles();
+	const file =
+		files.find((x) => x.path === source) ||
+		files.find((x) => x.basename === source);
+	if (!file) {
+		new Notice(t("exam.sourceNotFound"));
+		return;
+	}
+	const leaf = plugin.app.workspace.getLeaf("tab");
+	await leaf.openFile(file);
 }

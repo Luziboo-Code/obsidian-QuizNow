@@ -414,10 +414,26 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 			const row = el("div", "qn-item");
 			const headRow = el("div", "qn-flex-between");
 			headRow.appendChild(el("div", "qn-paper-name", b.name));
+			const actionsRow = el("div", "qn-flex");
 			const restoreBtn = btn("qn-btn-sm", t("settings.restore"), () => {
 				void restoreFrom(b);
 			});
-			headRow.appendChild(restoreBtn);
+			actionsRow.appendChild(restoreBtn);
+			const delBtn = btn("qn-btn-sm qn-btn-danger", t("settings.deleteBackup"), () => {
+				confirmDialog(plugin.app, t("settings.deleteBackupConfirm"), () => {
+					void (async () => {
+						try {
+							await plugin.store.deleteBackup(b.path);
+							new Notice(t("settings.backupDeleted"));
+							await renderBackups();
+						} catch (e) {
+							new Notice(t("settings.restoreFail", { msg: (e as Error).message }));
+						}
+					})();
+				});
+			});
+			actionsRow.appendChild(delBtn);
+			headRow.appendChild(actionsRow);
 			row.appendChild(headRow);
 			row.appendChild(
 				el(

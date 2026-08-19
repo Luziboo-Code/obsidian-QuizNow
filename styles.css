@@ -514,6 +514,22 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	word-break: break-word;
 }
 
+/* 可点击的来源笔记链接 */
+.qn-source-link {
+	cursor: pointer;
+	text-decoration: underline dotted;
+	text-underline-offset: 2px;
+}
+
+.qn-source-link:hover {
+	color: var(--qn-accent);
+}
+
+/* 历史试卷中答错的题目（左侧红色标记） */
+.qn-item-wrong {
+	border-left: 3px solid var(--qn-danger);
+}
+
 .qn-option {
 	display: flex;
 	align-items: flex-start;
@@ -940,4 +956,93 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 
 .qn-fade {
 	animation: qn-fade 0.25s ease;
+}
+
+/* ===== 手机端适配（Obsidian Mobile） ===== */
+
+/* 窄屏导航：更紧凑，图标主导 */
+body.is-mobile .qn-nav-item {
+	padding: 6px 5px;
+	font-size: 12px;
+	gap: 4px;
+}
+
+body.is-mobile .qn-nav-item .qn-nav-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+/* 内容区留白缩小，让窄屏显示更多内容 */
+body.is-mobile .qn-content {
+	padding: 10px;
+	gap: 10px;
+}
+
+body.is-mobile .qn-settings-scroll {
+	padding: 10px;
+	gap: 10px;
+}
+
+/* 统计卡在窄屏下固定两列 */
+body.is-mobile .qn-stats {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+body.is-mobile .qn-stat {
+	padding: 12px 10px;
+}
+
+body.is-mobile .qn-stat-value {
+	font-size: 22px;
+}
+
+/* 触摸友好的按钮与选项 */
+body.is-mobile .qn-btn {
+	padding: 11px 16px;
+}
+
+body.is-mobile .qn-option {
+	padding: 13px 14px;
+}
+
+body.is-mobile .qn-judge-btn {
+	padding: 16px;
+}
+
+/* 闪卡高度适配竖屏 */
+body.is-mobile .qn-flashcard {
+	height: min(320px, 55vh);
+}
+
+/* 来源文字在窄屏放宽，避免挤压 */
+body.is-mobile .qn-source {
+	max-width: 60%;
+}
+
+/* 标题字号微调 */
+body.is-mobile .qn-title {
+	font-size: 16px;
+}
+
+body.is-mobile .qn-question-content {
+	font-size: 14.5px;
+}
+
+/* 弹窗内列表间距（移动端手指操作） */
+body.is-mobile .qn-item,
+body.is-mobile .qn-paper-card {
+	padding: 13px 14px;
+}
+
+/* 兜底媒体查询（当 is-mobile 类不可用时） */
+@media (max-width: 480px) {
+	.qn-stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.qn-nav-item {
+		padding: 6px 5px;
+		font-size: 12px;
+		gap: 4px;
+	}
 }

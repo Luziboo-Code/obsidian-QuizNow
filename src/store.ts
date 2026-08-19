@@ -332,6 +332,19 @@ export class QuizStore {
 				: Math.round((correct / Math.max(1, total)) * 100);
 
 		const wrongIds = answers.filter((a) => !a.correct).map((a) => a.questionId);
+		// 保存完整试卷快照（深拷贝，避免引用后续变化），用于历史记录还原试卷内容
+		const snapshot = session.questions.map((q) => {
+			const a = session.answers[q.id];
+			return {
+				question: {
+					...q,
+					options: q.options ? [...q.options] : undefined,
+					answer: [...q.answer],
+				},
+				userAnswer: a ? [...a.userAnswer] : [],
+				correct: !!a?.correct,
+			};
+		});
 		const record: ExamRecord = {
 			id: newId(),
 			name: name || `${new Date().toLocaleString()} ${t("exam.name.auto")}`,
@@ -340,6 +353,7 @@ export class QuizStore {
 			correct,
 			score,
 			wrongIds,
+			snapshot,
 		};
 		this.data.examRecords.push(record);
 		this.data.paperBest[record.name] = Math.max(
@@ -495,7 +509,7 @@ export class QuizStore {
 		return normalizePath(`${dir}/backups`);
 	}
 
-	/** 导出完整数据（题库 + 记录 + 记忆 + 设置）为一个备份文件 */
+	/** 导出完整数据（题库 + 成绩记录 + 记忆进度 + 设置）为一个备份文件 */
 	async createBackup(): Promise<string> {
 		const adapter = this.plugin.app.vault.adapter;
 		const folder = this.backupFolder();
@@ -504,13 +518,24 @@ export class QuizStore {
 		const path = normalizePath(`${folder}/quiznow-backup-${stamp}.json`);
 		const payload = {
 			app: "obsidian-quiznow",
-			backupVersion: 1,
+			backupVersion: 2,
 			createdAt: Date.now(),
+			summary: {
+				questions: this.data.questions.length,
+				examRecords: this.data.examRecords.length,
+				reviewQueue: this.data.reviewIds.length,
+				weakSpots: this.data.weakIds.length,
+			},
 			data: this.data,
 			settings: this.settings,
 		};
 		await adapter.write(path, JSON.stringify(payload, null, 2));
 		return path;
+	}
+
+	/** 删除一个备份文件 */
+	async deleteBackup(path: string): Promise<void> {
+		await this.plugin.app.vault.adapter.remove(path);
 	}
 
 	/** 列出所有备份文件（按时间倒序） */

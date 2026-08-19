@@ -41,6 +41,13 @@ export interface ExamAnswer {
 	correct: boolean;
 }
 
+/** 一次考试中的单题快照（用于历史记录完整还原试卷内容） */
+export interface ExamQuestionSnapshot {
+	question: Question;
+	userAnswer: string[];
+	correct: boolean;
+}
+
 /** 一次考试的记录 */
 export interface ExamRecord {
 	id: string;
@@ -50,6 +57,8 @@ export interface ExamRecord {
 	correct: number;
 	score: number; // 0-100
 	wrongIds: string[];
+	/** 本次试卷的完整题目快照（含每题作答结果），旧记录可能缺失 */
+	snapshot?: ExamQuestionSnapshot[];
 }
 
 /** 一次进行中的考试会话（内存态，不持久化） */

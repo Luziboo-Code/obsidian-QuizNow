@@ -80,6 +80,7 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 						wrongQuestions: r.wrongIds
 							.map((id) => questions.find((q) => q.id === id))
 							.filter((q): q is Question => !!q),
+						snapshot: r.snapshot ?? [],
 					}));
 				new ExamHistoryModal(plugin.app, plugin, records).open();
 			},
