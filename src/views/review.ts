@@ -127,13 +127,24 @@ function renderFlash(
 	front.appendChild(el("div", "qn-flash-hint", t("review.flipHint")));
 	card.appendChild(front);
 
-	// 背面：答案与解析在可滚动区，评级按钮固定在底部（始终可见）
+	// 背面：题目回顾 + 红色标出的正确答案 + 答案解析，评级按钮固定在底部
 	const back = el("div", "qn-flash-face qn-flash-back");
 	const backScroll = el("div", "qn-flash-scroll");
-	const backTitle = el("div", "qn-result-title", t("review.answer"));
-	backScroll.appendChild(backTitle);
-	backScroll.appendChild(el("div", "qn-question-content", answerText(q)));
+	// 1. 原题题干
+	backScroll.appendChild(el("div", "qn-subtitle", t("review.questionLabel")));
+	backScroll.appendChild(
+		el("div", "qn-question-content", displayContent(q.content))
+	);
+	// 2. 正确答案（红色强调）
+	const ansRow = el("div", "qn-review-answer");
+	ansRow.appendChild(
+		el("span", "qn-review-answer-label", t("review.answerLabel"))
+	);
+	ansRow.appendChild(el("b", "", answerText(q)));
+	backScroll.appendChild(ansRow);
+	// 3. 答案解析
 	if (q.explanation) {
+		backScroll.appendChild(el("div", "qn-subtitle", t("review.explainLabel")));
 		backScroll.appendChild(el("div", "qn-explain", q.explanation));
 	}
 	back.appendChild(backScroll);

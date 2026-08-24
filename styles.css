@@ -714,6 +714,29 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	flex-shrink: 0;
 }
 
+/* 复习背面：正确答案（红色强调） */
+.qn-review-answer {
+	padding: 10px 12px;
+	border-radius: var(--qn-radius-sm);
+	background: color-mix(in srgb, var(--qn-danger) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--qn-danger) 35%, transparent);
+	font-size: 13.5px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.qn-review-answer-label {
+	color: var(--text-muted);
+	font-weight: 600;
+	margin-right: 6px;
+}
+
+.qn-review-answer b {
+	color: var(--qn-danger);
+	font-weight: 700;
+}
+
 /* ---------- 复习评级按钮 ---------- */
 .qn-rate-row {
 	display: grid;
