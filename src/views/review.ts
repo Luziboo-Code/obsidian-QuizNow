@@ -1,7 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { Question } from "../types";
-import { answerText, displayContent } from "../question";
+import { answerText, cleanOption, displayContent } from "../question";
 import { isDue } from "../sm2";
 import { el, clear, btn, badge, emptyState, progressBar } from "../ui";
 import { t } from "../i18n";
@@ -13,7 +13,113 @@ const RATES = [
 	{ grade: 5, labelKey: "review.rate.easy", subKey: "review.rate.easySub", cls: "easy" },
 ];
 
+/** 是否为带选项的选择题（题干之外还有可展示/标红的选项） */
+function hasChoices(q: Question): boolean {
+	return (
+		(q.type === "single" || q.type === "multiple") &&
+		!!q.options &&
+		q.options.length > 0
+	);
+}
+
+/** 规范化选择题答案字母（兼容旧数据：小写、逗号/空格拼接的字符串等） */
+function optionLetters(q: Question): string[] {
+	const list = Array.isArray(q.answer) ? q.answer : [String(q.answer ?? "")];
+	return list
+		.flatMap((a) => String(a).split(/[,，\s|]+/))
+		.map((s) => s.trim().toUpperCase())
+		.filter((l) => /^[A-H]$/.test(l));
+}
+
+/** 复习展示用的答案文本：选择题按规范化字母渲染（选项内容缺失时退回纯字母） */
+function reviewAnswerText(q: Question): string {
+	if (q.type !== "single" && q.type !== "multiple") return answerText(q);
+	const letters = optionLetters(q);
+	if (letters.length === 0) {
+		return Array.isArray(q.answer) ? q.answer.join("、") : String(q.answer ?? "");
+	}
+	return letters
+		.map((l) => {
+			const idx = l.charCodeAt(0) - 65;
+			const opt = q.options && q.options[idx] ? cleanOption(q.options[idx]) : "";
+			return opt ? `${l}. ${opt}` : l;
+		})
+		.join("、");
+}
+
+/**
+ * 构建选项行列表：
+ * - highlight 为 null → 正面展示（不标红）；
+ * - highlight 给出字母集合 → 背面展示，正确选项标红。
+ */
+function buildOptionRows(q: Question, highlight: string[] | null): HTMLDivElement {
+	const wrap = el("div", "");
+	const opts = q.options ?? [];
+	for (let i = 0; i < opts.length; i++) {
+		const letter = String.fromCharCode(65 + i);
+		const isCorrect = !!highlight && highlight.includes(letter);
+		const row = el("div", `qn-option${isCorrect ? " qn-opt-answer" : ""}`);
+		row.appendChild(el("span", "qn-opt-letter", `${letter}.`));
+		row.appendChild(el("span", "", cleanOption(opts[i])));
+		wrap.appendChild(row);
+	}
+	return wrap;
+}
+
+/** 当前闪卡的尺寸观察者（每次渲染替换） */
+let flashSizer: ResizeObserver | null = null;
+
+function stopFlashSizing(): void {
+	if (flashSizer) {
+		flashSizer.disconnect();
+		flashSizer = null;
+	}
+}
+
+/** 元素外边距高度（offsetHeight 不含上下 margin，需单独计入） */
+function outerHeight(node: HTMLElement): number {
+	const cs = window.getComputedStyle(node);
+	return (
+		node.offsetHeight +
+		(parseFloat(cs.marginTop) || 0) +
+		(parseFloat(cs.marginBottom) || 0)
+	);
+}
+
+/**
+ * 按内容自适应卡片高度（不裁剪任何内容）：
+ * - 读取背面滚动区的内容真实自然高（含其内部全部 margin/gap），
+ *   再加底部固定元素（分隔线/提示/评级行，含上下外边距）与面内 padding；
+ * - 卡片恰好等于内容总高 → 能放进视口时无需任何滚动、无裁剪；
+ * - 超过视口时由外层内容区整体滚动（与普通笔记一致），不再出现面内局部裁切。
+ */
+function fitCard(wrap: HTMLElement, back: HTMLElement): void {
+	const scrollEl = back.querySelector<HTMLElement>(".qn-flash-scroll");
+	if (!scrollEl) return;
+
+	// 1. 临时让滚动区按内容自身高度布局，读出真实自然高（含内部全部 margin/间距）
+	scrollEl.style.flex = "0 0 auto";
+	let required = scrollEl.scrollHeight;
+	for (const c of Array.from(back.children)) {
+		if (c !== scrollEl) required += outerHeight(c as HTMLElement);
+	}
+	const csBack = window.getComputedStyle(back);
+	required +=
+		Math.ceil(
+			(parseFloat(csBack.paddingTop) || 0) +
+				(parseFloat(csBack.paddingBottom) || 0) +
+				(back.children.length - 1) * (parseFloat(csBack.rowGap) || 0)
+		) +
+		2; // 面内 padding、子项间距与取整余量
+	scrollEl.style.flex = "";
+
+	// 2. 定高：卡片恰好容纳背面全部内容（正面内容必然 ≤ 背面，同样不会被裁）
+	wrap.style.flex = "none";
+	wrap.style.height = `${required}px`;
+}
+
 export function renderReview(container: HTMLElement, plugin: QuizNowApi): void {
+	stopFlashSizing();
 	clear(container);
 	const due = plugin.store.dueReviewQuestions();
 
@@ -83,6 +189,7 @@ function renderFlash(
 	list: Question[],
 	index: number
 ): void {
+	stopFlashSizing();
 	clear(container);
 	if (index >= list.length) {
 		const card = el("div", "qn-card qn-fade");
@@ -116,18 +223,21 @@ function renderFlash(
 	const card = el("div", "qn-flashcard");
 	wrap.appendChild(card);
 
-	// 正面：题干在可滚动区，提示固定在底部
+	// 正面：完整题目（题干 + 选择题选项），提示固定在底部
 	const front = el("div", "qn-flash-face");
 	const frontScroll = el("div", "qn-flash-scroll");
 	const head = el("div", "qn-question-head");
 	head.appendChild(badge(q.type));
 	frontScroll.appendChild(head);
 	frontScroll.appendChild(el("div", "qn-question-content", displayContent(q.content)));
+	if (hasChoices(q)) {
+		frontScroll.appendChild(buildOptionRows(q, null));
+	}
 	front.appendChild(frontScroll);
 	front.appendChild(el("div", "qn-flash-hint", t("review.flipHint")));
 	card.appendChild(front);
 
-	// 背面：题目回顾 + 红色标出的正确答案 + 答案解析，评级按钮固定在底部
+	// 背面：题目回顾 + 完整选项（正确答案标红）+ 答案解析，评级按钮固定在底部
 	const back = el("div", "qn-flash-face qn-flash-back");
 	const backScroll = el("div", "qn-flash-scroll");
 	// 1. 原题题干
@@ -135,14 +245,19 @@ function renderFlash(
 	backScroll.appendChild(
 		el("div", "qn-question-content", displayContent(q.content))
 	);
-	// 2. 正确答案（红色强调）
+	// 2. 完整选项列表（选择题）：正确选项标红
+	if (hasChoices(q)) {
+		backScroll.appendChild(el("div", "qn-subtitle", t("review.optionLabel")));
+		backScroll.appendChild(buildOptionRows(q, optionLetters(q)));
+	}
+	// 3. 正确答案（红色强调）
 	const ansRow = el("div", "qn-review-answer");
 	ansRow.appendChild(
 		el("span", "qn-review-answer-label", t("review.answerLabel"))
 	);
-	ansRow.appendChild(el("b", "", answerText(q)));
+	ansRow.appendChild(el("b", "", reviewAnswerText(q)));
 	backScroll.appendChild(ansRow);
-	// 3. 答案解析
+	// 4. 答案解析
 	if (q.explanation) {
 		backScroll.appendChild(el("div", "qn-subtitle", t("review.explainLabel")));
 		backScroll.appendChild(el("div", "qn-explain", q.explanation));
@@ -173,6 +288,13 @@ function renderFlash(
 	});
 
 	container.appendChild(wrap);
+
+	// 按背面内容自适应卡片高度（能放下则恰好等高、无需滚动；面板尺寸变化时重算）
+	fitCard(container, wrap, back);
+	if (typeof ResizeObserver !== "undefined") {
+		flashSizer = new ResizeObserver(() => fitCard(container, wrap, back));
+		flashSizer.observe(container);
+	}
 }
 
 async function rate(

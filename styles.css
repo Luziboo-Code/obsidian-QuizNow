@@ -646,13 +646,16 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 /* ---------- 闪卡 ---------- */
 .qn-flash-wrap {
 	perspective: 1200px;
+	position: relative;
+	/* JS 测量前的兜底布局：撑满内容区剩余高度；fitCard() 会将其定为恰好容纳背面内容的精确高度 */
+	flex: 1;
+	min-height: 300px;
+	transition: height 0.18s ease;
 }
 
 .qn-flashcard {
-	position: relative;
-	width: 100%;
-	height: min(340px, 62vh);
-	min-height: 220px;
+	position: absolute;
+	inset: 0;
 	transform-style: preserve-3d;
 	transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
 	cursor: pointer;
@@ -735,6 +738,44 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 .qn-review-answer b {
 	color: var(--qn-danger);
 	font-weight: 700;
+}
+
+/* 复习背面：完整选项列表（非交互展示，点击仅翻转卡片） */
+.qn-flash-back .qn-option {
+	cursor: default;
+	user-select: text;
+}
+
+.qn-flash-back .qn-option:hover {
+	border-color: var(--background-modifier-border);
+	background: var(--background-primary);
+	box-shadow: none;
+}
+
+/* 复习背面：正确选项标红 */
+.qn-option.qn-opt-answer {
+	border-color: color-mix(in srgb, var(--qn-danger) 55%, transparent);
+	background: color-mix(
+		in srgb,
+		var(--qn-danger) 9%,
+		var(--background-primary)
+	);
+}
+
+.qn-option.qn-opt-answer .qn-opt-letter {
+	color: var(--qn-danger);
+	font-weight: 800;
+}
+
+.qn-option.qn-opt-answer > span:not(.qn-opt-letter) {
+	color: var(--qn-danger);
+	font-weight: 600;
+}
+
+/* 闪卡内选项行间距收紧，一屏容纳更多内容（不影响考试页的选项样式） */
+.qn-flash-wrap .qn-option {
+	padding: 9px 12px;
+	margin-bottom: 6px;
 }
 
 /* ---------- 复习评级按钮 ---------- */
@@ -1036,9 +1077,9 @@ body.is-mobile .qn-judge-btn {
 	padding: 16px;
 }
 
-/* 闪卡高度适配竖屏 */
-body.is-mobile .qn-flashcard {
-	height: min(320px, 55vh);
+/* 移动端闪卡高度按内容自适应（fitCard），这里只提供最小兜底高度 */
+body.is-mobile .qn-flash-wrap {
+	min-height: 280px;
 }
 
 /* 来源文字在窄屏放宽，避免挤压 */
