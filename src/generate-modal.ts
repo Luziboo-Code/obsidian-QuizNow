@@ -1,5 +1,6 @@
 import { Modal, Notice, type App } from "obsidian";
 import type { QuizNowApi } from "./plugin-api";
+import { isAiConfigured } from "./types";
 import type { Question, QuestionType } from "./types";
 import { answerText, newId, displayContent, cleanOption } from "./question";
 import { el, btn, badge } from "./ui";
@@ -43,7 +44,7 @@ export class GenerationConfigModal extends Modal {
 		wrap.appendChild(title);
 
 		const s = this.plugin.store.settings;
-		const aiAvailable = s.aiEnabled && !!s.aiApiKey;
+		const aiAvailable = isAiConfigured(s);
 
 		// 题目数量
 		const countInput = el("input", "qn-input");

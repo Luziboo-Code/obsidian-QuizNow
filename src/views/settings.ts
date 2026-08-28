@@ -1,6 +1,8 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
-import type { CustomPrompt, Lang, QuestionType, Settings } from "../types";
+import { AI_PROVIDER_IDS, AI_PROVIDER_PRESETS } from "../types";
+import type { AiProfile, AiProvider, CustomPrompt, Lang, QuestionType, Settings } from "../types";
+import { aiTestConnection } from "../ai";
 import { newId } from "../question";
 import { el, clear, btn, field, confirmDialog } from "../ui";
 import { LANG_IDS, LANG_LABELS, t } from "../i18n";
@@ -46,16 +48,31 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 					plugin.refreshCommands?.(true);
 					plugin.refresh();
 				}
-			});
+			}).catch((e) => new Notice(t("settings.saveFail", { msg: String(e) })));
 		};
 		if (immediate) {
+			// 先冲刷尚未保存的防抖输入，避免丢失或让过期值覆盖本次写入
+			if (debounceTimer !== null && pendingSave) {
+				window.clearTimeout(debounceTimer);
+				debounceTimer = null;
+				const flush = pendingSave;
+				pendingSave = null;
+				flush();
+			}
 			apply();
 		} else {
-			if (debounceTimer) window.clearTimeout(debounceTimer);
-			debounceTimer = window.setTimeout(apply, 400);
+			if (debounceTimer !== null) window.clearTimeout(debounceTimer);
+			const deferred = apply;
+			pendingSave = deferred;
+			debounceTimer = window.setTimeout(() => {
+				debounceTimer = null;
+				pendingSave = null;
+				deferred();
+			}, 400);
 		}
 	};
 	let debounceTimer: number | null = null;
+	let pendingSave: (() => void) | null = null;
 
 	const title = el("div", "qn-title");
 	setIcon(title, "settings");
@@ -228,14 +245,20 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	aiCheckRow.appendChild(el("span", "", t("settings.aiEnable")));
 	card.appendChild(aiCheckRow);
 
+	// 服务商切换（OpenAI / DeepSeek / Ollama 本地 / 自定义）：切换时预填默认地址与模型
+	const provSel = el("select", "qn-select");
+	for (const p of AI_PROVIDER_IDS) {
+		const o = el("option", "", t(`ai.provider.${p}`));
+		o.value = p;
+		provSel.appendChild(o);
+	}
+	provSel.value = s.aiProvider || "openai";
+
 	const urlInput = el("input", "qn-input");
 	urlInput.value = s.aiBaseUrl;
 	urlInput.addEventListener("input", () => {
-		saveSettings({
-			aiBaseUrl: urlInput.value.trim() || "https://api.openai.com/v1",
-		});
+		saveSettings({ aiBaseUrl: urlInput.value.trim() });
 	});
-	card.appendChild(field(t("settings.apiUrl"), urlInput, t("settings.apiUrlHelp")));
 
 	const keyInput = el("input", "qn-input");
 	keyInput.type = "password";
@@ -244,14 +267,103 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	keyInput.addEventListener("input", () => {
 		saveSettings({ aiApiKey: keyInput.value.trim() });
 	});
-	card.appendChild(field(t("settings.apiKey"), keyInput));
 
 	const modelInput = el("input", "qn-input");
 	modelInput.value = s.aiModel;
 	modelInput.addEventListener("input", () => {
-		saveSettings({ aiModel: modelInput.value.trim() || "gpt-4o-mini" });
+		saveSettings({ aiModel: modelInput.value.trim() });
 	});
+
+	// Key 字段（含动态提示：本地服务商如 Ollama 无需 API Key）
+	const keyField = el("div", "qn-field");
+	keyField.appendChild(el("label", "", t("settings.apiKey")));
+	keyField.appendChild(keyInput);
+	const keyHintEl = el("div", "qn-note", "");
+	keyField.appendChild(keyHintEl);
+
+	/** 按服务商同步 Key 输入框状态（不写设置） */
+	const syncProviderUi = (p: AiProvider): void => {
+		const preset = AI_PROVIDER_PRESETS[p];
+		if (!preset) return;
+		keyInput.disabled = !preset.needsKey;
+		keyHintEl.textContent = preset.needsKey ? "" : t("ai.noKey");
+	};
+	syncProviderUi(s.aiProvider || "openai");
+
+	provSel.addEventListener("change", () => {
+		const cur = plugin.store.settings;
+		const prev = cur.aiProvider || "openai";
+		const next = provSel.value as AiProvider;
+		if (next === prev) return;
+
+		// 1. 归档当前地址/Key/模型到「上一个服务商」的配置记忆（切换不丢失已配置的值）
+		const profiles: Partial<Record<AiProvider, AiProfile>> = {
+			...(cur.aiProfiles || {}),
+		};
+		profiles[prev] = {
+			baseUrl: urlInput.value.trim(),
+			apiKey: keyInput.value.trim(),
+			model: modelInput.value.trim(),
+		};
+
+		// 2. 载入下一个服务商已保存的配置；从未配置过则用预设默认值填充
+		const incoming = profiles[next];
+		const preset = AI_PROVIDER_PRESETS[next];
+		const url = incoming?.baseUrl ?? (preset.baseUrl || ""); // 自定义服务商无预设地址，留空待填
+		const key = incoming?.apiKey ?? "";
+		const model = incoming?.model ?? preset.model;
+
+		urlInput.value = url;
+		keyInput.value = key;
+		modelInput.value = model;
+		syncProviderUi(next);
+
+		saveSettings(
+			{
+				aiProvider: next,
+				aiBaseUrl: url,
+				aiApiKey: key,
+				aiModel: model,
+				aiProfiles: profiles,
+			},
+			true
+		);
+	});
+
+	card.appendChild(field(t("settings.aiProvider"), provSel, t("settings.aiProviderHelp")));
+	card.appendChild(field(t("settings.apiUrl"), urlInput, t("settings.apiUrlHelp")));
+	card.appendChild(keyField);
 	card.appendChild(field(t("settings.model"), modelInput));
+
+	// 测试 AI 连接：用当前界面中的地址/Key/模型发送一条超短提示词，结果就地显示
+	const testBtn = btn("", t("settings.aiTest"), () => {
+		void runAiTest();
+	});
+	const testStatus = el("div", "qn-note qn-ai-test", "");
+	const runAiTest = async (): Promise<void> => {
+		const url = urlInput.value.trim();
+		const model = modelInput.value.trim();
+		if (!url || !model) {
+			testStatus.className = "qn-note qn-ai-test fail";
+			testStatus.textContent = t("ai.testInvalid");
+			return;
+		}
+		testBtn.disabled = true;
+		testBtn.textContent = t("ai.testTesting");
+		try {
+			const reply = await aiTestConnection(url, keyInput.value.trim(), model);
+			testStatus.className = "qn-note qn-ai-test ok";
+			testStatus.textContent = t("ai.testOk", { reply: reply.slice(0, 60) });
+		} catch (e) {
+			testStatus.className = "qn-note qn-ai-test fail";
+			testStatus.textContent = String((e as Error).message);
+		} finally {
+			testBtn.disabled = false;
+			testBtn.textContent = t("settings.aiTest");
+		}
+	};
+	card.appendChild(testBtn);
+	card.appendChild(testStatus);
 
 	const aiCountInput = el("input", "qn-input");
 	aiCountInput.type = "number";

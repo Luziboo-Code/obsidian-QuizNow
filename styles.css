@@ -643,6 +643,49 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	white-space: pre-wrap;
 }
 
+/* ---------- 错题笔记 ---------- */
+/* 考试答错后的笔记输入区 */
+.qn-note-box {
+	margin-top: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.qn-note-input {
+	min-height: 72px;
+}
+
+.qn-note-saved {
+	font-size: 11px;
+	color: var(--text-faint);
+	line-height: 1.2;
+}
+
+/* 复习卡背面：同步展示的错题笔记（琥珀色，区别于蓝色解析） */
+.qn-mistake-note {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-left: 3px solid var(--qn-warn);
+	background: color-mix(in srgb, var(--qn-warn) 8%, transparent);
+	border-radius: 0 var(--qn-radius-sm) var(--qn-radius-sm) 0;
+	font-size: 12.5px;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+/* AI 连接测试结果（设置页） */
+.qn-ai-test.ok {
+	color: var(--qn-success);
+}
+
+.qn-ai-test.fail {
+	color: var(--qn-danger);
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
 /* ---------- 闪卡 ---------- */
 .qn-flash-wrap {
 	perspective: 1200px;

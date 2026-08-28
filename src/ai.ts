@@ -109,6 +109,22 @@ async function chatCompletion(
 	return content;
 }
 
+/** 测试 AI 配置是否连通：发送一条超短提示词，成功返回模型回复，失败抛出带详情的错误 */
+export async function aiTestConnection(
+	baseUrl: string,
+	apiKey: string,
+	model: string
+): Promise<string> {
+	const text = await chatCompletion(
+		baseUrl,
+		apiKey,
+		model,
+		[{ role: "user", content: "This is a connectivity test. Reply with exactly one word: pong" }],
+		false // 不用 JSON 模式，兼容性最好（部分本地模型不支持 response_format）
+	);
+	return text.trim();
+}
+
 function parseJsonLoose(text: string): unknown {
 	const t = text.trim();
 	// 去掉可能的 ```json ... ``` 包裹

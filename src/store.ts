@@ -43,6 +43,7 @@ export class QuizStore {
 					paperBest: raw.paperBest || {},
 					reviewIds: raw.reviewIds || [],
 					weakIds: raw.weakIds || [],
+					notes: raw.notes || {},
 					questions: raw.questions || [],
 			  }
 			: base;
@@ -416,6 +417,22 @@ export class QuizStore {
 				this.settings.sm2MinInterval
 			);
 		}
+		await this.save();
+	}
+
+	// ---------- 错题笔记 ----------
+
+	/** 读取某题的错题笔记（无则空字符串） */
+	getNote(questionId: string): string {
+		return this.data.notes?.[questionId] ?? "";
+	}
+
+	/** 保存错题笔记（空内容 = 删除该题笔记） */
+	async saveNote(questionId: string, text: string): Promise<void> {
+		const v = (text || "").trim();
+		if (!this.data.notes) this.data.notes = {};
+		if (v) this.data.notes[questionId] = v;
+		else delete this.data.notes[questionId];
 		await this.save();
 	}
 

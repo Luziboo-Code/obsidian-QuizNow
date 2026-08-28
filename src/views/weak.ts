@@ -1,5 +1,6 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
+import { isAiConfigured } from "../types";
 import type { Question } from "../types";
 import { newId, displayContent } from "../question";
 import { isDue } from "../sm2";
@@ -153,7 +154,7 @@ async function genExplanation(
 	let text: string | null = null;
 
 	const s = plugin.store.settings;
-	if (s.aiEnabled && s.aiApiKey) {
+	if (isAiConfigured(s)) {
 		try {
 			text = await aiExplainQuestion({
 				baseUrl: s.aiBaseUrl,

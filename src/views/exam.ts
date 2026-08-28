@@ -213,7 +213,7 @@ function renderAnswering(
 		validateAndSubmit(plugin, session, q, state, (ok) => {
 			state.submitted = true;
 			state.correct = ok;
-			showResult(card, q, state);
+			showResult(card, plugin, q, state);
 			const isLast = session.index >= session.questions.length - 1;
 			actionRow.empty();
 			actionRow.appendChild(
@@ -243,14 +243,14 @@ function renderAnswering(
 
 	container.appendChild(card);
 
-	// 快捷键：提交后按 空格 / 回车 进入下一题（输入框内不拦截，避免影响打字）
+	// 快捷键：提交后按 空格 / 回车 进入下一题（输入区内不拦截，避免影响打字）
 	const keyHandler = (e: KeyboardEvent) => {
 		if (e.key !== " " && e.key !== "Enter" && e.key !== "Spacebar") return;
 		if (!state.submitted) return;
 		const target = e.target as HTMLElement | null;
-		const inField =
-			!!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
-		if (inField && e.key === " ") return; // 输入框内空格用于输入
+		if (!target) return;
+		if (target.tagName === "TEXTAREA") return; // 笔记多行输入：回车换行、空格打字
+		if (target.tagName === "INPUT" && e.key === " ") return; // 输入框内空格用于输入
 		e.preventDefault();
 		const isLast = session.index >= session.questions.length - 1;
 		if (isLast) {
@@ -369,7 +369,12 @@ function validateAndSubmit(
 	done(ok);
 }
 
-function showResult(card: HTMLElement, q: Question, state: AnswerState): void {
+function showResult(
+	card: HTMLElement,
+	plugin: QuizNowApi,
+	q: Question,
+	state: AnswerState
+): void {
 	const box = el(
 		"div",
 		`qn-result ${state.correct ? "ok" : "bad"} qn-fade`
@@ -393,7 +398,55 @@ function showResult(card: HTMLElement, q: Question, state: AnswerState): void {
 	if (q.explanation) {
 		box.appendChild(el("div", "qn-explain", q.explanation));
 	}
+	// 答错：下方提供错题笔记框（自动保存，复习时同步展示）
+	if (!state.correct) {
+		appendMistakeNote(box, plugin, q);
+	}
 	card.appendChild(box);
+}
+
+/** 错题笔记输入框：已有内容回显；打字防抖 + 失焦时自动保存到题库数据 */
+function appendMistakeNote(
+	box: HTMLElement,
+	plugin: QuizNowApi,
+	q: Question
+): void {
+	const wrap = el("div", "qn-note-box");
+	wrap.appendChild(el("div", "qn-subtitle", t("note.title")));
+
+	const ta = el("textarea", "qn-textarea qn-note-input");
+	ta.rows = 3;
+	ta.placeholder = t("note.placeholder");
+	ta.value = plugin.store.getNote(q.id);
+	wrap.appendChild(ta);
+
+	const savedEl = el("span", "qn-note-saved", "");
+	wrap.appendChild(savedEl);
+
+	let inputTimer: number | null = null;
+	let statusTimer: number | null = null;
+	const doSave = (): void => {
+		void plugin.store.saveNote(q.id, ta.value).then(() => {
+			savedEl.textContent = t("note.saved");
+			if (statusTimer) window.clearTimeout(statusTimer);
+			statusTimer = window.setTimeout(() => {
+				savedEl.textContent = "";
+			}, 1500);
+		});
+	};
+	ta.addEventListener("input", () => {
+		if (inputTimer) window.clearTimeout(inputTimer);
+		inputTimer = window.setTimeout(doSave, 600);
+	});
+	ta.addEventListener("blur", () => {
+		if (inputTimer) {
+			window.clearTimeout(inputTimer);
+			inputTimer = null;
+		}
+		doSave();
+	});
+
+	box.appendChild(wrap);
 }
 
 /* ================= 结果页 ================= */

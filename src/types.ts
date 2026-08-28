@@ -83,6 +83,67 @@ export interface CustomPrompt {
 /** 界面语言 */
 export type Lang = "zh" | "en" | "ja" | "ko";
 
+/** AI 服务商（OpenAI 兼容协议） */
+export type AiProvider =
+	| "openai"
+	| "deepseek"
+	| "ollama"
+	| "lmstudio"
+	| "custom";
+
+export const AI_PROVIDER_IDS: AiProvider[] = [
+	"openai",
+	"deepseek",
+	"ollama",
+	"lmstudio",
+	"custom",
+];
+
+/** 各服务商默认配置（首次启用该服务商时预填，用户仍可手动修改） */
+export const AI_PROVIDER_PRESETS: Record<
+	AiProvider,
+	{ baseUrl: string; model: string; needsKey: boolean }
+> = {
+	openai: {
+		baseUrl: "https://api.openai.com/v1",
+		model: "gpt-4o-mini",
+		needsKey: true,
+	},
+	deepseek: {
+		baseUrl: "https://api.deepseek.com",
+		model: "deepseek-v4-flash", // 也可改用 deepseek-v4-pro
+		needsKey: true,
+	},
+	ollama: {
+		baseUrl: "http://localhost:11434/v1",
+		model: "llama3.1:8b",
+		needsKey: false,
+	},
+	lmstudio: {
+		baseUrl: "http://localhost:1234/v1",
+		model: "qwen3.8-27b",
+		needsKey: false,
+	},
+	custom: { baseUrl: "", model: "", needsKey: true },
+};
+
+/** 单个服务商已保存的配置（切换服务商时按此记忆，避免覆盖用户自定义值） */
+export interface AiProfile {
+	baseUrl: string;
+	apiKey: string;
+	model: string;
+}
+
+/** 根据设置判断 AI 是否可用（本地服务商如 Ollama 无需 API Key） */
+export function isAiConfigured(
+	s: Pick<Settings, "aiEnabled" | "aiProvider" | "aiApiKey">
+): boolean {
+	if (!s.aiEnabled) return false;
+	const preset = AI_PROVIDER_PRESETS[s.aiProvider];
+	if (preset && !preset.needsKey) return true;
+	return !!s.aiApiKey;
+}
+
 /** 全局设置 */
 export interface Settings {
 	/** 界面语言 */
@@ -111,9 +172,14 @@ export interface Settings {
 	weakMasteryReps: number;
 	/** AI 生成开关 */
 	aiEnabled: boolean;
+	/** AI 服务商（决定默认地址/模型与是否需要 API Key） */
+	aiProvider: AiProvider;
+	/** 当前生效的 AI 配置（= aiProfiles[aiProvider]，切换时同步） */
 	aiBaseUrl: string;
 	aiApiKey: string;
 	aiModel: string;
+	/** 各服务商已保存的配置（key = 服务商 id；未配置过的服务商缺省用预设值） */
+	aiProfiles?: Partial<Record<AiProvider, AiProfile>>;
 	/** AI 一次生成数量 */
 	aiCount: number;
 	/** 薄弱点用 AI 生成解释 */
@@ -144,9 +210,11 @@ export const DEFAULT_SETTINGS: Settings = {
 	sm2MinInterval: 1,
 	weakMasteryReps: 2,
 	aiEnabled: false,
+	aiProvider: "openai",
 	aiBaseUrl: "https://api.openai.com/v1",
 	aiApiKey: "",
 	aiModel: "gpt-4o-mini",
+	aiProfiles: {},
 	aiCount: 5,
 	aiExplanation: true,
 	customPrompts: [],
@@ -172,6 +240,8 @@ export interface PluginData {
 	reviewIds: string[];
 	/** 薄弱点题目 id（必须理解透彻的知识点） */
 	weakIds: string[];
+	/** 错题笔记：题目 id -> 用户作答错误时写的笔记（复习时同步展示） */
+	notes: Record<string, string>;
 	/** 是否已初始化过示例题库 */
 	seeded?: boolean;
 }
@@ -187,6 +257,7 @@ export function emptyData(): PluginData {
 		sm: {},
 		reviewIds: [],
 		weakIds: [],
+		notes: {},
 	};
 }
 

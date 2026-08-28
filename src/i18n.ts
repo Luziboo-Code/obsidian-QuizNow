@@ -121,6 +121,26 @@ const zh: Dict = {
 	"review.rate.easySub": "轻松答对",
 	"review.movedWeak": "「{title}…」已移入薄弱点",
 
+	// 错题笔记（考试答错时填写，复习时同步展示）
+	"note.title": "错题笔记",
+	"note.placeholder": "写下这道题的错因 / 要点（自动保存，复习时会与该题一起显示）",
+	"note.saved": "笔记已保存 ✓",
+
+	// AI 服务商
+	"settings.aiProvider": "AI 服务商",
+	"settings.aiProviderHelp": "切换服务商时自动填入默认地址与模型，之后仍可手动修改。",
+	"ai.provider.openai": "OpenAI",
+	"ai.provider.deepseek": "DeepSeek",
+	"ai.provider.ollama": "Ollama（本地）",
+	"ai.provider.lmstudio": "LM Studio（本地）",
+	"ai.provider.custom": "自定义",
+	"ai.noKey": "该服务无需 API Key（如本地 Ollama）",
+	"settings.aiTest": "🔌 测试 AI 连接",
+	"ai.testTesting": "正在测试连接…",
+	"ai.testOk": "✓ 连接成功，模型回复：{reply}",
+	"ai.testInvalid": "请先填写接口地址与模型名称再测试",
+	"settings.saveFail": "设置保存失败：{msg}",
+
 	// 薄弱点
 	"weak.title": "薄弱点",
 	"weak.desc":
@@ -381,6 +401,26 @@ const en: Dict = {
 	"review.rate.easySub": "Effortless recall",
 	"review.movedWeak": "「{title}…」moved to Weak Spots",
 
+	// Mistake notes (filled in on wrong answers; shown during review)
+	"note.title": "Mistake Note",
+	"note.placeholder": "Write why it was wrong / key point (auto-saved, shown with this question during review)",
+	"note.saved": "Note saved ✓",
+
+	// AI provider
+	"settings.aiProvider": "AI Provider",
+	"settings.aiProviderHelp": "Switching pre-fills the default base URL & model; you can edit them afterwards.",
+	"ai.provider.openai": "OpenAI",
+	"ai.provider.deepseek": "DeepSeek",
+	"ai.provider.ollama": "Ollama (local)",
+	"ai.provider.lmstudio": "LM Studio (local)",
+	"ai.provider.custom": "Custom",
+	"ai.noKey": "No API key needed for this provider (e.g. local Ollama).",
+	"settings.aiTest": "🔌 Test AI Connection",
+	"ai.testTesting": "Testing connection…",
+	"ai.testOk": "✓ Connected, model replied: {reply}",
+	"ai.testInvalid": "Fill in the base URL and model name before testing",
+	"settings.saveFail": "Failed to save settings: {msg}",
+
 	"weak.title": "Weak Spots",
 	"weak.desc":
 		"{n} weak spot(s). Repeatedly missed knowledge points that need an explanation to memorize, then practice via SM-2 exams.",
@@ -635,6 +675,26 @@ const ja: Dict = {
 	"review.rate.easySub": "すぐに思い出せた",
 	"review.movedWeak": "「{title}…」を弱点に移動しました",
 
+	// ミスノート（試験で誤答時に記入、復習時に併せて表示）
+	"note.title": "ミスノート",
+	"note.placeholder": "誤答の原因 / 要点を書きましょう（自動保存、復習時にこの問題と一緒に表示されます）",
+	"note.saved": "ノート保存しました ✓",
+
+	// AI プロバイダー
+	"settings.aiProvider": "プロバイダー",
+	"settings.aiProviderHelp": "切り替えると既定のアドレスとモデルが自動入力されます。後から手動編集できます。",
+	"ai.provider.openai": "OpenAI",
+	"ai.provider.deepseek": "DeepSeek",
+	"ai.provider.ollama": "Ollama（ローカル）",
+	"ai.provider.lmstudio": "LM Studio（ローカル）",
+	"ai.provider.custom": "カスタム",
+	"ai.noKey": "このサービスには API キーが不要です（ローカルの Ollama など）",
+	"settings.aiTest": "🔌 AI接続をテスト",
+	"ai.testTesting": "接続テスト中…",
+	"ai.testOk": "✓ 接続成功、モデルの応答：{reply}",
+	"ai.testInvalid": "テスト前にアドレスとモデル名を入力してください",
+	"settings.saveFail": "設定の保存に失敗しました：{msg}",
+
 	"weak.title": "弱点",
 	"weak.desc":
 		"弱点は {n} 個。繰り返し誤答する未理解のポイントを保管し、解説を生成して記憶を助け、SM-2 で出題して固めます。",
@@ -887,6 +947,26 @@ const ko: Dict = {
 	"review.rate.easy": "쉬움",
 	"review.rate.easySub": "쉽게 떠올림",
 	"review.movedWeak": "「{title}…」을(를) 약점으로 이동했습니다",
+
+	// 오답 노트 (시험에서 틀렸을 때 작성, 복습 시 함께 표시)
+	"note.title": "오답 노트",
+	"note.placeholder": "오답 원인 / 핵심을 적어보세요 (자동 저장, 복습 시 이 문제와 함께 표시됩니다)",
+	"note.saved": "노트가 저장되었습니다 ✓",
+
+	// AI 제공자
+	"settings.aiProvider": "AI 제공자",
+	"settings.aiProviderHelp": "제공자를 전환하면 기본 주소와 모델이 자동 입력됩니다. 이후에 수동으로 수정할 수 있습니다.",
+	"ai.provider.openai": "OpenAI",
+	"ai.provider.deepseek": "DeepSeek",
+	"ai.provider.ollama": "Ollama (로컬)",
+	"ai.provider.lmstudio": "LM Studio (로컬)",
+	"ai.provider.custom": "사용자 지정",
+	"ai.noKey": "이 서비스에는 API 키가 필요 없습니다 (예: 로컬 Ollama)",
+	"settings.aiTest": "🔌 AI 연결 테스트",
+	"ai.testTesting": "연결 테스트 중…",
+	"ai.testOk": "✓ 연결 성공, 모델 응답: {reply}",
+	"ai.testInvalid": "테스트 전에 주소와 모델 이름을 입력하세요",
+	"settings.saveFail": "설정 저장 실패: {msg}",
 
 	"weak.title": "약점",
 	"weak.desc":

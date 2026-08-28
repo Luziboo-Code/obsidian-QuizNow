@@ -6,6 +6,7 @@ import {
 	type TAbstractFile,
 } from "obsidian";
 import type { QuizNowApi, TabName } from "./plugin-api";
+import { isAiConfigured } from "./types";
 import type { ExamRecord, ExamSession, Lang, Question, QuestionType, Settings } from "./types";
 import { newId, shuffleOptions } from "./question";
 import { generateFromNote } from "./generator";
@@ -239,7 +240,7 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		try {
 			const text = await this.app.vault.read(file);
 			const s = this.store.settings;
-			const useAi = opts?.useAi ?? (s.aiEnabled && !!s.aiApiKey);
+			const useAi = opts?.useAi ?? isAiConfigured(s);
 			const count = opts?.count ?? (s.aiCount || 5);
 			const includeTypes =
 				opts?.includeTypes ?? TYPE_KEYS.filter((tt) => s.includeTypes[tt]);

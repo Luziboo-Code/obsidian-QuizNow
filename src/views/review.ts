@@ -262,6 +262,12 @@ function renderFlash(
 		backScroll.appendChild(el("div", "qn-subtitle", t("review.explainLabel")));
 		backScroll.appendChild(el("div", "qn-explain", q.explanation));
 	}
+	// 5. 错题笔记（考试答错时用户所写，复习时同步调出）
+	const note = plugin.store.getNote(q.id);
+	if (note) {
+		backScroll.appendChild(el("div", "qn-subtitle", t("note.title")));
+		backScroll.appendChild(el("div", "qn-mistake-note", note));
+	}
 	back.appendChild(backScroll);
 	const rateRow = el("div", "qn-rate-row");
 	for (const r of RATES) {
@@ -289,10 +295,10 @@ function renderFlash(
 
 	container.appendChild(wrap);
 
-	// 按背面内容自适应卡片高度（能放下则恰好等高、无需滚动；面板尺寸变化时重算）
-	fitCard(container, wrap, back);
+	// 按背面内容自适应卡片高度（恰好等高、无裁剪；面板尺寸变化导致换行时重算）
+	fitCard(wrap, back);
 	if (typeof ResizeObserver !== "undefined") {
-		flashSizer = new ResizeObserver(() => fitCard(container, wrap, back));
+		flashSizer = new ResizeObserver(() => fitCard(wrap, back));
 		flashSizer.observe(container);
 	}
 }
