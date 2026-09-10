@@ -192,10 +192,10 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
 	language: "zh",
-	// 空 = 使用运行时默认（Obsidian 配置目录 configDir 下的 quiznow/questions.json）
+	// 空 = 使用运行时默认（vaults 根目录下的 quiznow/questions.json）
 	bankFile: "",
 	bankFolder: "QuizNow/题库",
-	genMode: "direct",
+	genMode: "dialog",
 	defaultCount: 10,
 	includeTypes: {
 		single: true,

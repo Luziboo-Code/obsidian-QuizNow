@@ -153,7 +153,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 
 	// 生成方式：直接生成 / 弹出配置弹窗
 	const genModeWrap = el("div", "qn-chips");
-	let genMode: "direct" | "dialog" = s.genMode || "direct";
+	let genMode: "direct" | "dialog" = s.genMode || "dialog";
 	const mkGenChip = (value: "direct" | "dialog", label: string) => {
 		const chip = el(
 			"button",

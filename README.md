@@ -18,7 +18,7 @@
 > fill-in-the-blank, true-false), track wrong answers with the **SM-2 spaced
 > repetition** algorithm, and focus on the knowledge points you keep missing.
 > The UI supports **简体中文 / English / 日本語 / 한국어**, the question bank lives in
-> a single-file JSON database (hidden from the file explorer), and everything can be
+> a single-file JSON database at your vault root (`quiznow/`), and everything can be
 > backed up and restored with one click. See [README.en.md](README.en.md) for the full
 > English documentation.
 
@@ -66,7 +66,7 @@
 **亮点速览**
 
 -  **文档右上角一键出题**：打开任意笔记，点击标题栏右上角的 📋 按钮即可生成试卷
--  **单文件数据库**：全部题目集中存于 `.obsidian/quiznow/questions.json`，随库同步、易于备份
+-  **单文件数据库**：全部题目集中存于库根目录 `quiznow/questions.json`，随库同步、易于备份
 -  **一键备份/恢复**：导出全部数据（题库 + 记录 + 记忆进度 + 设置）为单个 JSON 文件
 -  **AI 增强（可选）**：接入任意 OpenAI 兼容接口，AI 出题 + AI 讲解；未配置时使用零成本内置生成
 -  **自定义生成指令**：多条 AI prompt 管理，可随时切换
@@ -82,8 +82,8 @@
 3. **打开主面板**：点击左侧边栏的 🎓 图标，或命令面板执行
    `QuizNow：打开主面板`（主面板在**主内容区的新标签页**中打开，不使用侧栏）。
 
-> 首次启动会自动创建示例题库数据库（默认 `.obsidian/quiznow/questions.json`，位于
-> Obsidian 隐藏目录，**不会显示在文件树中**），可在首页统计卡中查看题目。
+> 首次启动会自动创建示例题库数据库（默认为库根目录下的 `quiznow/questions.json`），
+> 可在首页统计卡中查看题目。
 
 ---
 
@@ -97,7 +97,7 @@
    `QuizNow：基于当前笔记生成试题`；
 3. 生成过程中会显示"正在生成试卷…"提示，完成后弹出预览窗口：
    - **立即答题** → 直接开始考试；
-   - **加入题库** → 全部题目写入题库数据库（默认 `.obsidian/quiznow/questions.json`）。
+   - **加入题库** → 全部题目写入题库数据库（默认为库根目录下的 `quiznow/questions.json`）。
 
 ### 2. 考试
 
@@ -142,11 +142,10 @@
 
 ---
 
-##  题库存储（单文件数据库 · 隐藏目录）
+##  题库存储（单文件数据库 · 库根目录）
 
-题库保存在**单个 JSON 数据库文件**中（默认 `.obsidian/quiznow/questions.json`，
-可在设置中修改路径）。所有题目集中存储，不再产生细碎文件，且位于
-Obsidian 隐藏目录 `.obsidian` 中，**不会显示在文件树里**，随库同步、易于备份。
+题库保存在**单个 JSON 数据库文件**中（默认为库根目录下的 `quiznow/questions.json`，
+可在设置中修改路径）。所有题目集中存储，不再产生细碎文件，随库同步、易于备份。
 
 数据库文件结构：
 
@@ -168,9 +167,9 @@ Obsidian 隐藏目录 `.obsidian` 中，**不会显示在文件树里**，随库
 }
 ```
 
-> **升级提示**：从旧版本升级时，位于库内可见目录（`QuizNow/`）的旧题库数据库、
-> 备份文件以及更早的 Markdown 题目文件夹都会**自动迁移到 `.obsidian/quiznow/`**
-> 隐藏目录，并清理旧目录（不会误删其中的其它用户文件）。
+> **升级提示**：从旧版本升级时，位于库内可见目录（`QuizNow/`）或 `.obsidian/quiznow/`
+> 隐藏目录下的旧题库数据库、备份文件以及更早的 Markdown 题目文件夹都会**自动迁移到
+> 库根目录 `quiznow/`**，并清理旧目录（不会误删其中的其它用户文件）。
 
 ---
 
@@ -179,7 +178,7 @@ Obsidian 隐藏目录 `.obsidian` 中，**不会显示在文件树里**，随库
 在「设置 → 数据备份」中：
 
 - **立即备份**：把题库、考试记录、SM-2 记忆进度与全部设置导出为一个
-  `quiznow-backup-时间戳.json` 文件（默认存放于 `.obsidian/quiznow/backups/`）；
+  `quiznow-backup-时间戳.json` 文件（默认存放于库根目录下的 `quiznow/backups/`）；
 - **恢复**：从备份列表中任选一份恢复（**恢复前会自动先备份当前数据**，防止误操作丢失）；
 - 备份文件可随时复制到其它设备，恢复后完整还原插件状态。
 
@@ -218,8 +217,7 @@ A：单文件数据库避免每次生成产生大量细碎文件，且随库同�
 功能上（生成 → 加入题库 → 抽题 → 复习）与旧版完全一致。
 
 **Q：升级后我原来的题目还在吗？**
-A：在。旧版 `QuizNow/` 下的题库数据库、备份文件与 Markdown 题目文件夹会在
-升级时**自动迁移到隐藏目录 `.obsidian/quiznow/`**，并清理旧目录。
+A：在。旧版的题库数据库（包括 `QuizNow/` 可见目录与 `.obsidian/quiznow/` 隐藏目录下的）、备份文件与 Markdown 题目文件夹会在升级时**自动迁移到库根目录 `quiznow/`**，并清理旧目录。
 
 **Q：没有 AI 密钥可以使用吗？**
 A：可以。未配置 AI 时使用内置的启发式生成（加粗术语 → 填空/单选，键值对 → 填空），
@@ -230,9 +228,8 @@ A：在旧设备「设置 → 数据备份 → 立即备份」，把生成的备
 在新设备安装插件后「设置 → 数据备份 → 恢复」即可。
 
 **Q：数据保存在哪里？卸载插件会丢失吗？**
-A：数据保存在插件 `data.json` 与题库数据库文件（默认 `.obsidian/quiznow/questions.json`，
-位于 Obsidian 隐藏目录，**不显示在文件树中**）里；**卸载插件不会删除这些文件**，
-重新安装后自动读取。
+A：数据保存在插件 `data.json` 与题库数据库文件（默认为库根目录下的
+`quiznow/questions.json`）里；**卸载插件不会删除这些文件**，重新安装后自动读取。
 
 ---
 
@@ -260,8 +257,8 @@ npm run build      # 类型检查 + 生产构建
 
 ##  数据与隐私
 
-- 所有数据**仅保存在本地库内**（插件 `data.json` + 题库数据库文件
-  `.obsidian/quiznow/`，不显示在文件树中），不上传任何服务器；
+- 所有数据**仅保存在本地库内**（插件 `data.json` + 题库数据库文件，
+  默认位于库根目录的 `quiznow/`），不上传任何服务器；
 - **文件读取说明**：插件会读取库内所有 Markdown 文件的**文件名**（用于把
   「薄弱点」解释与题目的来源笔记关联起来），但**文件内容**只在你主动执行
   「从当前笔记生成试题」「生成解释」等操作时才读取；

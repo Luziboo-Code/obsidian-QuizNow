@@ -164,7 +164,7 @@ const zh: Dict = {
 	"settings.title": "设置",
 	"settings.exam": "考试",
 	"settings.bankFolder": "题库数据库文件（JSON，相对库根目录）",
-	"settings.bankFolderHint": "默认存放于 Obsidian 配置目录（configDir）的隐藏位置，不会显示在文件树中。",
+	"settings.bankFolderHint": "默认存放于库根目录下的 quiznow/ 文件夹，会显示在文件树中。",
 	"settings.defaultCount": "默认出题数量",
 	"settings.scoreMode": "评分方式",
 	"settings.percent": "百分比（答对比例）",
@@ -241,6 +241,7 @@ const zh: Dict = {
 	"notice.bankReadFail": "题库数据库读取失败，请检查文件是否损坏",
 	"notice.migrated": "已将旧题库迁移为数据库文件：{path}，原文件夹可手动删除。",
 	"notice.movedHidden": "QuizNow 数据已迁移到隐藏目录：{path}，不再显示在文件树中。",
+	"notice.movedRoot": "QuizNow 题库数据已迁移到库根目录：{path}。",
 
 	// 生成结果弹窗
 	"gen.title": "已生成 {n} 道题",
@@ -442,7 +443,7 @@ const en: Dict = {
 	"settings.title": "Settings",
 	"settings.exam": "Exam",
 	"settings.bankFolder": "Bank database file (JSON, relative to vault root)",
-	"settings.bankFolderHint": "Stored in Obsidian's config directory (configDir) by default, so it won't appear in the file explorer.",
+	"settings.bankFolderHint": "Stored by default in a `quiznow` folder at your vault root (visible in the file explorer).",
 	"settings.defaultCount": "Default question count",
 	"settings.scoreMode": "Scoring",
 	"settings.percent": "Percentage (share correct)",
@@ -518,6 +519,7 @@ const en: Dict = {
 	"notice.bankReadFail": "Failed to read the question bank database; check whether the file is corrupted",
 	"notice.migrated": "Legacy question bank migrated to database file: {path}. The old folder can be deleted manually.",
 	"notice.movedHidden": "QuizNow data moved to a hidden folder: {path}. It no longer appears in the file explorer.",
+	"notice.movedRoot": "QuizNow question bank data moved to the vault-root folder: {path}.",
 
 	"gen.title": "{n} question(s) generated",
 	"gen.subtitle": "Based on note \"{name}\". Answer now or add to the bank.",
@@ -716,7 +718,7 @@ const ja: Dict = {
 	"settings.title": "設定",
 	"settings.exam": "試験",
 	"settings.bankFolder": "問題集データベースファイル（JSON、保管庫ルート相対）",
-	"settings.bankFolderHint": "既定では Obsidian 設定フォルダ（configDir）内の隠し位置に保存され、ファイルエクスプローラーに表示されません。",
+	"settings.bankFolderHint": "既定では保管庫ルート直下の quiznow/ フォルダに保存され、ファイルエクスプローラーに表示されます。",
 	"settings.defaultCount": "既定の問題数",
 	"settings.scoreMode": "採点方式",
 	"settings.percent": "百分率（正解割合）",
@@ -792,6 +794,7 @@ const ja: Dict = {
 	"notice.bankReadFail": "問題集データベースを読み込めませんでした。ファイルが破損していないか確認してください",
 	"notice.migrated": "旧問題集をデータベースファイルに移行しました：{path}。元のフォルダは手動で削除できます。",
 	"notice.movedHidden": "QuizNow データを隠しフォルダに移行しました：{path}。ファイルエクスプローラーに表示されなくなります。",
+	"notice.movedRoot": "QuizNow の問題集データを保管庫ルート直下のフォルダに移行しました：{path}。",
 
 	"gen.title": "{n} 問生成しました",
 	"gen.subtitle": "ノート「{name}」に基づく問題です。すぐに解答するか問題集に追加できます。",
@@ -989,7 +992,7 @@ const ko: Dict = {
 	"settings.title": "설정",
 	"settings.exam": "시험",
 	"settings.bankFolder": "문제은행 데이터베이스 파일 (JSON, 볼트 루트 기준)",
-	"settings.bankFolderHint": "기본적으로 Obsidian 설정 폴더(configDir)의 숨김 위치에 저장되어 파일 탐색기에 표시되지 않습니다.",
+	"settings.bankFolderHint": "기본적으로 볼트 루트의 quiznow/ 폴더에 저장되며, 파일 탐색기에 표시됩니다.",
 	"settings.defaultCount": "기본 문제 수",
 	"settings.scoreMode": "채점 방식",
 	"settings.percent": "백분율 (정답 비율)",
@@ -1065,6 +1068,7 @@ const ko: Dict = {
 	"notice.bankReadFail": "문제은행 데이터베이스를 읽지 못했습니다. 파일 손상 여부를 확인하세요",
 	"notice.migrated": "기존 문제은행을 데이터베이스 파일로 마이그레이션했습니다: {path}. 원래 폴더는 수동으로 삭제할 수 있습니다.",
 	"notice.movedHidden": "QuizNow 데이터를 숨김 폴더로 이동했습니다: {path}. 파일 탐색기에 더 이상 표시되지 않습니다.",
+	"notice.movedRoot": "QuizNow 문제은행 데이터를 볼트 루트의 폴더로 이동했습니다: {path}.",
 
 	"gen.title": "{n}문제 생성됨",
 	"gen.subtitle": "노트 「{name}」 기반. 바로 풀거나 문제은행에 추가할 수 있습니다.",

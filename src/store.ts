@@ -15,7 +15,7 @@ import { setLang, t } from "./i18n";
 /**
  * 数据与题库数据库的管理层。
  *
- * 题库使用单一 JSON 文件存储（默认 configDir/quiznow/questions.json），所有题目集中在一个
+ * 题库使用单一 JSON 文件存储（默认 vaults 根目录下的 quiznow/questions.json），所有题目集中在一个
  * 数据库文件中，不再产生大量细碎的 Markdown 文件；考试记录 / SM-2 卡片 /
  * 复习与薄弱点队列保存在插件 data.json 中。两者均可通过「数据备份」导出。
  */
@@ -58,14 +58,17 @@ export class QuizStore {
 		};
 		setLang(this.settings.language);
 
-		// 旧版默认路径（configDir 下的中文文件名 题库.json）自动切换到新默认
+		// 旧版默认路径（configDir 隐藏目录下的 questions.json / 中文文件名 题库.json）自动切换到新默认（vaults 根目录 quiznow/）
 		const cfgDir = this.plugin.app.vault.configDir;
-		if (this.settings.bankFile === normalizePath(`${cfgDir}/quiznow/题库.json`)) {
+		if (
+			this.settings.bankFile === normalizePath(`${cfgDir}/quiznow/questions.json`) ||
+			this.settings.bankFile === normalizePath(`${cfgDir}/quiznow/题库.json`)
+		) {
 			this.settings.bankFile = "";
 		}
 
-		// 旧版数据迁移：优先迁移可见目录下的 JSON 数据库，再迁移更早的 .md 文件夹版
-		await this.migrateVisibleBankIfNeeded();
+		// 旧版数据迁移：优先迁移各历史位置下的 JSON 数据库，再迁移更早的 .md 文件夹版
+		await this.migrateOldBankIfNeeded();
 		await this.migrateLegacyBankIfNeeded();
 		await this.loadBank();
 		// 兜底：数据库为空但旧版 data.json 中残留题目快照时，写回数据库
@@ -95,13 +98,12 @@ export class QuizStore {
 
 	// ---------- 题库数据库（单文件 JSON） ----------
 
-	/** 题库数据库文件路径（默认：Obsidian 配置目录 configDir 下的 quiznow/questions.json） */
+	/** 题库数据库文件路径（默认：vaults 根目录下的 quiznow/questions.json） */
 	bankPath(): string {
 		if (this.settings.bankFile && this.settings.bankFile.trim()) {
 			return normalizePath(this.settings.bankFile);
 		}
-		const configDir = this.plugin.app.vault.configDir;
-		return normalizePath(`${configDir}/quiznow/questions.json`);
+		return normalizePath("quiznow/questions.json");
 	}
 
 	/** 确保目录存在（递归创建） */
@@ -163,17 +165,19 @@ export class QuizStore {
 	}
 
 	/**
-	 * 旧版本数据位于库内可见目录（QuizNow/），会显示在文件树中；
-	 * 现在默认迁移到 .obsidian 隐藏目录，避免占用文件树。
+	 * 历史版本的数据位置（可见的 QuizNow/ 目录、configDir 隐藏目录下的中文/英文文件名）
+	 * 统一迁移到新默认：vaults 根目录下的 quiznow/。
 	 */
-	private async migrateVisibleBankIfNeeded(): Promise<void> {
+	private async migrateOldBankIfNeeded(): Promise<void> {
 		const adapter = this.plugin.app.vault.adapter;
 		const target = this.bankPath();
+		if (await adapter.exists(target)) return; // 新位置已有数据
 		const configDir = this.plugin.app.vault.configDir;
-		// 旧位置候选：早期可见目录版本、以及旧默认中文文件名的配置目录版本
+		// 旧位置候选（按新旧排序）：隐藏配置目录的当前默认、配置目录的中文文件名版、早期可见目录版
 		const candidates = [
-			normalizePath("QuizNow/题库.json"),
+			normalizePath(`${configDir}/quiznow/questions.json`),
 			normalizePath(`${configDir}/quiznow/题库.json`),
+			normalizePath("QuizNow/题库.json"),
 		].filter((p) => p !== target);
 		let oldPath: string | null = null;
 		for (const c of candidates) {
@@ -182,43 +186,47 @@ export class QuizStore {
 				break;
 			}
 		}
-		if (await adapter.exists(target)) return; // 新位置已有数据
+		if (!oldPath) return; // 无旧数据
 		try {
-			if (!oldPath) return; // 无旧数据
+			const oldDir = oldPath.split("/").slice(0, -1).join("/");
 			// 1. 迁移题库数据库
 			await this.ensureBankFile();
 			const text = await adapter.read(oldPath);
 			await adapter.write(target, text);
 			await adapter.remove(oldPath);
-			// 2. 迁移备份文件
-			const oldBackup = normalizePath("QuizNow/backups");
-			if (await adapter.exists(oldBackup)) {
-				const newBackupDir = this.backupFolder();
-				await this.ensureDir(newBackupDir);
-				const list = await adapter.list(oldBackup);
-				for (const f of list.files) {
-					const name = f.split("/").pop() || f;
-					await adapter.write(
-						normalizePath(`${newBackupDir}/${name}`),
-						await adapter.read(f)
-					);
-					await adapter.remove(f);
+			// 2. 迁移备份文件（旧库同级目录的 backups 子目录）
+			if (oldDir && oldDir !== configDir) {
+				const oldBackup = normalizePath(`${oldDir}/backups`);
+				if (await adapter.exists(oldBackup)) {
+					const newBackupDir = this.backupFolder();
+					await this.ensureDir(newBackupDir);
+					const list = await adapter.list(oldBackup);
+					for (const f of list.files) {
+						const name = f.split("/").pop() || f;
+						await adapter.write(
+							normalizePath(`${newBackupDir}/${name}`),
+							await adapter.read(f)
+						);
+						await adapter.remove(f);
+					}
+					try {
+						await adapter.rmdir(oldBackup, false);
+					} catch {
+						// 忽略删除失败
+					}
 				}
+			}
+			// 3. 删除空的旧目录（非空则保留，避免误删用户文件）
+			if (oldDir && oldDir !== configDir) {
 				try {
-					await adapter.rmdir(oldBackup, false);
+					await adapter.rmdir(oldDir, false);
 				} catch {
-					// 忽略删除失败
+					// 不存在或非空，忽略
 				}
 			}
-			// 3. 删除空的旧 QuizNow 目录（非空则保留，避免误删用户文件）
-			try {
-				await adapter.rmdir(normalizePath("QuizNow"), false);
-			} catch {
-				// 非空或不存在，忽略
-			}
-			new Notice(t("notice.movedHidden", { path: target }));
+			new Notice(t("notice.movedRoot", { path: target }));
 		} catch (e) {
-			console.error("[QuizNow] 隐藏目录迁移失败", e);
+			console.error("[QuizNow] 题库数据迁移失败", e);
 		}
 	}
 
