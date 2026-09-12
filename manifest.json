@@ -1,7 +1,7 @@
 {
 	"id": "quiznow",
 	"name": "QuizNow",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"minAppVersion": "1.7.2",
 	"description": "Generate single-choice, multiple-choice, fill-in-the-blank and true/false questions from your notes, then review them with SM-2 spaced repetition.",
 	"author": "Luziboo",

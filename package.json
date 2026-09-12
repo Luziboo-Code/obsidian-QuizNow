@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-quiznow",
-	"version": "1.2.0",
-	"description": "Obsidian 快速考试与科学复习插件",
+	"version": "1.2.1",
+	"description": "Obsidian plugin for generating exam questions from notes with SM-2 spaced repetition",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
