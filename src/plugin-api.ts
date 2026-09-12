@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import type { App, PluginManifest } from "obsidian";
 import type { QuizStore } from "./store";
 import type { ExamRecord, ExamSession } from "./types";
 
@@ -7,6 +7,8 @@ export type TabName = "home" | "exam" | "review" | "weak" | "settings";
 /** 视图与插件之间的最小接口（避免循环依赖） */
 export interface QuizNowApi {
 	app: App;
+	/** 插件 manifest（视图标题等复用，避免硬编码插件名） */
+	manifest: PluginManifest;
 	store: QuizStore;
 	currentSession: ExamSession | null;
 	/** 是否展示最近一次考试的成绩页（避免重进标签一直显示旧成绩） */

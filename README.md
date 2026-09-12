@@ -239,7 +239,22 @@ A：数据保存在插件 `data.json` 与题库数据库文件（默认为库根
 npm install
 npm run dev        # 监听模式，输出 main.js
 npm run build      # 类型检查 + 生产构建
+npm run lint       # 运行 Obsidian 官方社区插件审核规则集（提交前自检）
 ```
+
+### 发布新版本
+
+Obsidian 要求 **GitHub Release 的 tag 与 `manifest.json` 的 `version` 完全一致**，
+且 Release 需附带 `main.js`、`manifest.json`、`styles.css` 三个文件。
+本仓库已配置 GitHub Actions（push tag 时自动构建并发布）：
+
+```bash
+npm version minor      # 自动同步 manifest.json 与 versions.json，并提交 + 打 tag
+git push --follow-tags # 触发 .github/workflows/release.yml 生成 Release
+```
+
+> `versions.json` 记录每个插件版本所需的 `minAppVersion`，供 Obsidian 在用户
+> 客户端版本较低时回退到兼容的旧版本。
 
 | 模块 | 说明 |
 | --- | --- |

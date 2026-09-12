@@ -1,11 +1,13 @@
 {
 	"name": "obsidian-quiznow",
-	"version": "1.0.0",
+	"version": "1.2.0",
 	"description": "Obsidian 快速考试与科学复习插件",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint .",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [
 		"obsidian",
@@ -14,12 +16,17 @@
 		"spaced-repetition",
 		"sm2"
 	],
-	"author": "QuizNow",
+	"author": "Luziboo",
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint/js": "^9.39.5",
+		"@eslint/json": "^0.14.0",
 		"@types/node": "^20.14.0",
 		"esbuild": "^0.21.5",
+		"eslint": "^9.39.5",
+		"eslint-plugin-obsidianmd": "^0.4.2",
 		"obsidian": "^1.5.7",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"typescript-eslint": "^8.70.0"
 	}
 }

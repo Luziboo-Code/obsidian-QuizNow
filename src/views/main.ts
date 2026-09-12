@@ -2,7 +2,7 @@ import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import type { QuizNowApi, TabName } from "../plugin-api";
 import { renderHome } from "./home";
 import { renderExam, cleanupExamKeys } from "./exam";
-import { renderReview } from "./review";
+import { renderReview, stopFlashSizing } from "./review";
 import { renderWeak } from "./weak";
 import { renderSettings } from "./settings";
 import { el, clear } from "../ui";
@@ -34,7 +34,8 @@ export class QuizNowView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "QuizNow";
+		// 直接复用 manifest 中的插件名，避免硬编码
+		return this.plugin.manifest.name;
 	}
 
 	getIcon(): string {
@@ -53,6 +54,9 @@ export class QuizNowView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		// 释放视图持有的监听资源（考试快捷键 / 闪卡尺寸观察器），避免关闭后仍引用 DOM
+		cleanupExamKeys();
+		stopFlashSizing();
 		this.contentEl.empty();
 	}
 

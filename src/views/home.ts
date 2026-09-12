@@ -8,7 +8,7 @@ import {
 	questionStatus,
 	type QuestionListItem,
 } from "../list-modal";
-import type { ExamQuestionSnapshot, Question } from "../types";
+import type { Question } from "../types";
 
 /** 组装考试记录视图数据（可按试卷名过滤） */
 function buildRecords(plugin: QuizNowApi, nameFilter?: string) {
@@ -26,7 +26,7 @@ function buildRecords(plugin: QuizNowApi, nameFilter?: string) {
 			wrongQuestions: r.wrongIds
 				.map((id) => questions.find((q) => q.id === id))
 				.filter((q): q is Question => !!q),
-			snapshot: (r.snapshot ?? []) as ExamQuestionSnapshot[],
+			snapshot: r.snapshot ?? [],
 		}));
 }
 

@@ -69,7 +69,7 @@ function buildOptionRows(q: Question, highlight: string[] | null): HTMLDivElemen
 /** 当前闪卡的尺寸观察者（每次渲染替换） */
 let flashSizer: ResizeObserver | null = null;
 
-function stopFlashSizing(): void {
+export function stopFlashSizing(): void {
 	if (flashSizer) {
 		flashSizer.disconnect();
 		flashSizer = null;
@@ -98,7 +98,7 @@ function fitCard(wrap: HTMLElement, back: HTMLElement): void {
 	if (!scrollEl) return;
 
 	// 1. 临时让滚动区按内容自身高度布局，读出真实自然高（含内部全部 margin/间距）
-	scrollEl.style.flex = "0 0 auto";
+	scrollEl.classList.add("qn-measuring");
 	let required = scrollEl.scrollHeight;
 	for (const c of Array.from(back.children)) {
 		if (c !== scrollEl) required += outerHeight(c as HTMLElement);
@@ -111,10 +111,10 @@ function fitCard(wrap: HTMLElement, back: HTMLElement): void {
 				(back.children.length - 1) * (parseFloat(csBack.rowGap) || 0)
 		) +
 		2; // 面内 padding、子项间距与取整余量
-	scrollEl.style.flex = "";
+	scrollEl.classList.remove("qn-measuring");
 
 	// 2. 定高：卡片恰好容纳背面全部内容（正面内容必然 ≤ 背面，同样不会被裁）
-	wrap.style.flex = "none";
+	wrap.classList.add("qn-flash-fitted");
 	wrap.style.height = `${required}px`;
 }
 

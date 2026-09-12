@@ -248,7 +248,9 @@ export async function aiGenerateQuestions(
 
 /** 清洗 AI 生成的题干：去掉行首标题/列表/引用标记，压缩空白 */
 function cleanAiContent(content: unknown): string {
-	const text = String(content ?? "")
+	// 仅接受字符串：AI 返回非字符串（对象 / 数字等）时视为无效内容
+	if (typeof content !== "string") return "";
+	const text = content
 		.split("\n")
 		.map((l) =>
 			l

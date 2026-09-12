@@ -263,7 +263,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 	const keyInput = el("input", "qn-input");
 	keyInput.type = "password";
 	keyInput.value = s.aiApiKey;
-	keyInput.placeholder = "sk-...";
+	keyInput.placeholder = t("settings.apiKeyPlaceholder");
 	keyInput.addEventListener("input", () => {
 		saveSettings({ aiApiKey: keyInput.value.trim() });
 	});
@@ -286,7 +286,7 @@ export function renderSettings(container: HTMLElement, plugin: QuizNowApi): void
 		const preset = AI_PROVIDER_PRESETS[p];
 		if (!preset) return;
 		keyInput.disabled = !preset.needsKey;
-		keyHintEl.textContent = preset.needsKey ? "" : t("ai.noKey");
+		keyHintEl.textContent = preset.needsKey ? t("settings.apiKeyHint") : t("ai.noKey");
 	};
 	syncProviderUi(s.aiProvider || "openai");
 

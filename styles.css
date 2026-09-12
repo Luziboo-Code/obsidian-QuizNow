@@ -735,6 +735,16 @@ body.theme-dark .qn-badge-judge { background: rgba(52, 211, 153, 0.15); color: #
 	gap: 10px;
 }
 
+/* JS 测量期间临时按内容自然高度布局（fitCard 测完即移除） */
+.qn-flash-scroll.qn-measuring {
+	flex: 0 0 auto;
+}
+
+/* fitCard() 定高后：卡片不再参与伸缩，高度由 JS 精确指定 */
+.qn-flash-wrap.qn-flash-fitted {
+	flex: none;
+}
+
 /* 背面底部的评级按钮固定可见，不受内容滚动影响 */
 .qn-flash-back .qn-rate-row,
 .qn-flash-back > .qn-divider,

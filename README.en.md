@@ -244,7 +244,22 @@ these files** — they are re-read automatically after reinstallation.
 npm install
 npm run dev        # watch mode, outputs main.js
 npm run build      # type-check + production build
+npm run lint       # runs Obsidian's official community-plugin review ruleset
 ```
+
+### Releasing
+
+Obsidian requires the **GitHub release tag to be identical to `version` in
+`manifest.json`**, with `main.js`, `manifest.json` and `styles.css` attached as
+release assets. This repo ships a GitHub Actions workflow that does this on tag push:
+
+```bash
+npm version minor      # syncs manifest.json + versions.json, commits and tags
+git push --follow-tags # triggers .github/workflows/release.yml
+```
+
+> `versions.json` records the `minAppVersion` required by each plugin version, so
+> Obsidian can fall back to a compatible older release on older app versions.
 
 | Module | Description |
 | --- | --- |
