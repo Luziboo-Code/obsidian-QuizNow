@@ -6,7 +6,7 @@
 
 **基于当前笔记一键生成考试试题 · 单选/多选/填空/判断 · SM-2 科学间隔复习**
 
-[简体中文](README.md) | [English](README.en.md)
+[English](README.md) | [简体中文](README.zh.md)
 
 </div>
 
@@ -19,7 +19,7 @@
 > repetition** algorithm, and focus on the knowledge points you keep missing.
 > The UI supports **简体中文 / English / 日本語 / 한국어**, the question bank lives in
 > a single-file JSON database at your vault root (`quiznow/`), and everything can be
-> backed up and restored with one click. See [README.en.md](README.en.md) for the full
+> backed up and restored with one click. See [README.md](README.md) for the full
 > English documentation.
 
 ---

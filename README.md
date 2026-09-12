@@ -6,7 +6,7 @@
 
 **Generate exam questions from your notes in one click · Single / Multiple / Fill-in-the-blank / True-False · SM-2 spaced repetition**
 
-[简体中文](README.md) | [English](README.en.md)
+[English](README.md) | [简体中文](README.zh.md)
 
 </div>
 
