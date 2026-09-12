@@ -1,10 +1,10 @@
 <div align="center">
 
-#  QuizNow — Obsidian 快速考试与复习插件
+#  QuizNow — Exam & Review Plugin for Obsidian
 
 ![UI](user_interface_imgs/interface_05.png)
 
-**基于当前笔记一键生成考试试题 · 单选/多选/填空/判断 · SM-2 科学间隔复习**
+**Generate exam questions from your notes in one click · Single / Multiple / Fill-in-the-blank / True-False · SM-2 spaced repetition**
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -13,141 +13,135 @@
 ---
 
 > **QuizNow** is a clean, modern, lightweight Obsidian plugin that completes the full
-> **Learn → Exam → Review → Master** loop inside your vault. Generate exam questions
-> from the note you are reading with one click (single / multiple choice,
-> fill-in-the-blank, true-false), track wrong answers with the **SM-2 spaced
-> repetition** algorithm, and focus on the knowledge points you keep missing.
-> The UI supports **简体中文 / English / 日本語 / 한국어**, the question bank lives in
-> a single-file JSON database at your vault root (`quiznow/`), and everything can be
-> backed up and restored with one click. See [README.en.md](README.en.md) for the full
-> English documentation.
+> **"Learn → Exam → Review → Master"** loop right inside your vault:
+> generate questions from the note you're reading → take exams → wrong answers flow into
+> SM-2 spaced repetition → knowledge points you keep missing land in **Weak Spots** for focused practice.
+
+-  Built with vanilla DOM — no runtime frameworks, extremely low resource usage
+-  UI in **简体中文 / English / 日本語 / 한국어** (switchable in Settings)
+-  Question bank stored in a **single-file JSON database** — no more scattered files, with one-click **backup/restore**
 
 ---
 
-> **QuizNow** 是一个简洁、现代、轻量的 Obsidian 插件，帮助你在库内完成
-> **「学习 → 考试 → 复习 → 巩固」** 的完整闭环：
-> 从正在阅读的笔记生成试题 → 考试作答 → 错题自动进入 SM-2 间隔复习 →
-> 反复答错的知识点进入「薄弱点」重点突破。
+##  Table of Contents
 
--  纯原生 DOM 实现，无任何运行时框架，资源占用极低
--  界面支持 **简体中文 / English / 日本語 / 한국어** 四种语言
--  题库使用**单文件 JSON 数据库**存储，不再产生细碎文件，支持一键**备份/恢复**
-
----
-
-##  目录
-
-- [功能特性](#-功能特性)
-- [快速开始](#-快速开始)
-- [使用指南](#-使用指南)
-- [命令一览](#-命令一览)
-- [题型与答题方式](#-题型与答题方式)
-- [题库存储（单文件数据库）](#-题库存储单文件数据库)
-- [数据备份与恢复](#-数据备份与恢复)
-- [AI 生成（可选）](#-ai-生成可选)
-- [多语言支持](#-多语言支持)
-- [常见问题（FAQ）](#-常见问题faq)
-- [开发](#-开发)
-- [数据与隐私](#-数据与隐私)
-- [许可证](#-许可证)
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Usage Guide](#-usage-guide)
+- [Commands](#-commands)
+- [Question Types & Answering](#-question-types--answering)
+- [Question Bank (Single-File Database)](#-question-bank-single-file-database)
+- [Backup & Restore](#-backup--restore)
+- [AI Generation (Optional)](#-ai-generation-optional)
+- [Language Support](#-language-support)
+- [FAQ](#-faq)
+- [Development](#-development)
+- [Data & Privacy](#-data--privacy)
+- [License](#-license)
 
 ---
 
-##  功能特性
+##  Features
 
-| 板块 | 内容 |
+| Section | Description |
 | --- | --- |
-| **首页** | 第一栏：试题数量 / 错题数量 / 待复习数量 / 试卷数量统计卡；第二栏：每份试卷的**最高分**卡片（展示数量可在设置中调整） |
-| **考试** | 闪卡式答题界面；单选/判断**点击即自动提交**，多选/填空手动提交；题目数量与题型自由设定；生成后可选「立即答题」或「加入题库」；答错的题自动入库并进入复习队列 |
-| **复习** | 考试答错的题自动汇总；按 **SM-2 间隔复习**算法重新答题（自评：忘记/困难/良好/简单）；**再次答错自动移入薄弱点** |
-| **薄弱点** | 反复答错、未真正理解的知识点集中管理；一键**生成解释**（AI 讲解或自动提取笔记上下文）帮助记忆；按 SM-2 对薄弱点出题重新作答，连续答对即自动移出 |
-| **设置** | 题库数据库路径、默认出题数量、评分方式、题型组合、首页成绩卡数量、SM-2 参数、薄弱点掌握阈值、AI 接口、**自定义生成指令**、**界面语言**、**数据备份/恢复**等全局配置 |
+|  **Home** | Row 1: stat cards for question count / wrong answers / due reviews / exam papers; Row 2: **best score** card for each exam paper (number shown configurable) |
+|  **Exam** | Flashcard-style answering; single-choice & true-false **submit on click**, multiple-choice & fill-in-the-blank submit manually; configurable question count and types; after generation choose **"Answer Now"** or **"Add to Bank"**; wrong answers are auto-saved to the bank and review queue |
+|  **Review** | Wrong answers from exams collected automatically; re-answer with the **SM-2 spaced repetition** algorithm (self-rate: Again / Hard / Good / Easy); **answering wrong again moves the question to Weak Spots** |
+|  **Weak Spots** | Knowledge points you keep missing, managed in one place; one-click **explanation generation** (AI or extracted from your note) to help memorization; SM-2-based re-exams; consecutive correct answers graduate the point automatically |
+|  **Settings** | Bank database path, default question count, scoring mode, question types, papers shown on home, SM-2 parameters, weak-spot mastery threshold, AI endpoint, **custom generation prompts**, **UI language**, **backup/restore** and more |
 
-**亮点速览**
+**Highlights**
 
--  **文档右上角一键出题**：打开任意笔记，点击标题栏右上角的 📋 按钮即可生成试卷
--  **单文件数据库**：全部题目集中存于库根目录 `quiznow/questions.json`，随库同步、易于备份
--  **一键备份/恢复**：导出全部数据（题库 + 记录 + 记忆进度 + 设置）为单个 JSON 文件
--  **AI 增强（可选）**：接入任意 OpenAI 兼容接口，AI 出题 + AI 讲解；未配置时使用零成本内置生成
--  **自定义生成指令**：多条 AI prompt 管理，可随时切换
--  **SM-2 科学复习**：经典间隔重复算法，自动安排每题的下次复习时间
-
----
-
-##  快速开始
-
-1. **下载插件**：将 `main.js`、`manifest.json`、`styles.css` 放入
-   `<你的库>/.obsidian/plugins/obsidian-quiznow/` 目录（不存在则自建）；
-2. **启用插件**：打开 Obsidian「设置 → 第三方插件」→ 启用 **QuizNow 快速考试与复习**；
-3. **打开主面板**：点击左侧边栏的 🎓 图标，或命令面板执行
-   `QuizNow：打开主面板`（主面板在**主内容区的新标签页**中打开，不使用侧栏）。
-
-> 首次启动会自动创建示例题库数据库（默认为库根目录下的 `quiznow/questions.json`），
-> 可在首页统计卡中查看题目。
+-  **One-click generation from the document header** — open any note and click the 📋 button in the top-right corner of its title bar
+-  **Single-file database at your vault root** — all questions live in `quiznow/questions.json` (configurable), synced with your vault and easy to back up
+-  **One-click backup/restore** — export everything (bank + records + memory progress + settings) to a single JSON file
+-  **Optional AI enhancement** — plug in any OpenAI-compatible API for AI question generation and explanations; built-in zero-cost generation when not configured
+-  **Custom generation prompts** — manage multiple AI prompts and switch between them anytime
+-  **SM-2 science-backed review** — the classic spaced-repetition algorithm schedules each question's next review
 
 ---
 
-##  使用指南
+##  Quick Start
 
-### 1. 从笔记生成试题
+1. **Install**: copy `main.js`, `manifest.json`, `styles.css` into
+   `<your-vault>/.obsidian/plugins/obsidian-quiznow/` (create it if missing);
+2. **Enable**: Obsidian "Settings → Community plugins" → enable **QuizNow**;
+3. **Open**: click the 🎓 icon in the left ribbon, or run the command
+   `QuizNow: Open QuizNow panel` (opens in a **new tab in the main content area**, not the sidebar).
 
-1. 打开一篇笔记 —— 重点术语用 `**加粗**` 标记，或使用「键: 值」形式的行，
-   能显著提高内置生成的题目质量；
-2. 点击文档**标题栏右上角的 📋 按钮**，或执行命令
-   `QuizNow：基于当前笔记生成试题`；
-3. 生成过程中会显示"正在生成试卷…"提示，完成后弹出预览窗口：
-   - **立即答题** → 直接开始考试；
-   - **加入题库** → 全部题目写入题库数据库（默认为库根目录下的 `quiznow/questions.json`）。
-
-### 2. 考试
-
-- 在「考试」标签中设置**题目数量**、**题型**（单选/多选/填空/判断）与
-  **出题范围**（题库随机 / 薄弱点）；
-- 单选、判断题**点击选项即自动提交**；多选需选完后点「提交答案」；
-  填空可**回车提交**；
-- 交卷后展示得分与错题回顾，**答错的题自动加入题库并进入复习队列**。
-
-### 3. 复习（SM-2 间隔复习）
-
-- 「复习」标签会列出**到期的错题**，以闪卡形式呈现：先回忆，点击卡片翻转查看答案；
-- 自评记忆质量（忘记 / 困难 / 良好 / 简单），插件按 SM-2 算法安排下次复习时间；
-- **再次答错 → 自动移入「薄弱点」**。
-
-### 4. 薄弱点突破
-
-- 进入「薄弱点」标签，对每个知识点点击 **✨ 生成解释** 帮助理解记忆；
-- 点击 ** 薄弱点测试** 重新答题，连续答对（默认 2 次，可设置）即视为掌握并移出。
+> On first launch a sample bank database is created (`quiznow/questions.json` at
+> your vault root by default). Browse questions via the Home stat cards.
 
 ---
 
-## ⌨ 命令一览
+##  Usage Guide
 
-| 命令 | 说明 |
+### 1. Generate Questions from a Note
+
+1. Open a note — mark key terms in **bold** or use `key: value` lines to
+   significantly improve built-in generation quality;
+2. Click the ** button in the note's title bar (top-right)**, or run
+   `QuizNow: Generate questions from current note`;
+3. A "Generating exam questions…" notice appears; when done, a preview dialog shows:
+   - **Answer Now** → start the exam immediately;
+   - **Add to Bank** → all questions are written to the bank database `quiznow/questions.json` (vault root by default).
+
+### 2. Take an Exam
+
+- In the **Exam** tab, set the **question count**, **types**
+  (single / multiple / fill / true-false) and **source** (random from bank / weak spots);
+- Single-choice and true-false questions **submit the moment you click**;
+  multiple-choice requires clicking "Submit"; fill-in-the-blank supports **Enter to submit**;
+- After the last question you see your score and a review of mistakes —
+  **wrong answers are automatically added to the bank and the review queue**.
+
+### 3. Review (SM-2 spaced repetition)
+
+- The **Review** tab lists **due** wrong answers as flashcards: recall first,
+  click the card to flip and reveal the answer;
+- Self-rate your recall (Again / Hard / Good / Easy); the plugin schedules the
+  next review with the SM-2 algorithm;
+- **Answering wrong again moves the question to Weak Spots**.
+
+### 4. Master Your Weak Spots
+
+- Open the **Weak Spots** tab and click **✨ Generate Explanation** on any point to
+  aid understanding and memorization;
+- Click ** Weak Spot Exam** to re-answer; consecutive correct answers
+  (default 2, configurable) graduate the point out of Weak Spots.
+
+---
+
+##  Commands
+
+| Command | Description |
 | --- | --- |
-| `QuizNow：打开主面板` | 打开插件主界面（新标签页） |
-| `QuizNow：快速考试（题库随机抽题）` | 一键开始一场随机考试 |
-| `QuizNow：基于当前笔记生成试题` | 根据当前打开的笔记生成试题 |
-| 标题栏  按钮 | 同上（文档标题栏右上角） |
+| `QuizNow: Open QuizNow panel` | Open the main panel (new tab) |
+| `QuizNow: Quick exam (random from bank)` | Start a random exam in one click |
+| `QuizNow: Generate questions from current note` | Generate questions from the active note |
+|  Title-bar button | Same as above (top-right of the note) |
 
 ---
 
-##  题型与答题方式
+##  Question Types & Answering
 
-| 题型 | 答题方式 | 判定说明 |
+| Type | How to answer | Grading |
 | --- | --- | --- |
-| 单选 `single` | 点击选项即自动提交 | 唯一正确选项 |
-| 多选 `multiple` | 勾选后点「提交答案」 | 必须与标准答案**完全一致** |
-| 填空 `fill` | 输入后回车提交 | 大小写/空格不敏感，可接受多个答案 |
-| 判断 `judge` | 点击 ✓正确 / ✗错误 即自动提交 | 对 / 错 |
+| Single choice `single` | Click an option — auto-submit | Exactly one correct option |
+| Multiple choice `multiple` | Select, then click "Submit" | Must match the key **exactly** |
+| Fill-in-the-blank `fill` | Type and press Enter | Case/space-insensitive; multiple accepted answers |
+| True / False `judge` | Click ✓ True / ✗ False — auto-submit | True or False |
 
 ---
 
-##  题库存储（单文件数据库 · 库根目录）
+##  Question Bank (Single-File Database · Vault Root)
 
-题库保存在**单个 JSON 数据库文件**中（默认为库根目录下的 `quiznow/questions.json`，
-可在设置中修改路径）。所有题目集中存储，不再产生细碎文件，随库同步、易于备份。
+The bank is stored in **one JSON database file** (`quiznow/questions.json` at your
+vault root by default; path configurable in Settings). All questions live in a single
+file — no scattered files.
 
-数据库文件结构：
+Database structure:
 
 ```json
 {
@@ -156,133 +150,146 @@
     {
       "id": "unique-id",
       "type": "single | multiple | fill | judge",
-      "content": "法国的首都是哪里？",
-      "options": ["伦敦", "巴黎", "柏林", "罗马"],
+      "content": "What is the capital of France?",
+      "options": ["London", "Paris", "Berlin", "Rome"],
       "answer": ["B"],
-      "explanation": "巴黎是法国的首都",
-      "source": "我的笔记",
+      "explanation": "Paris is the capital of France",
+      "source": "My note",
       "createdAt": 1720000000000
     }
   ]
 }
 ```
 
-> **升级提示**：从旧版本升级时，位于库内可见目录（`QuizNow/`）或 `.obsidian/quiznow/`
-> 隐藏目录下的旧题库数据库、备份文件以及更早的 Markdown 题目文件夹都会**自动迁移到
-> 库根目录 `quiznow/`**，并清理旧目录（不会误删其中的其它用户文件）。
+> **Upgrading**: when upgrading from an older version, the bank database (including
+> copies in the visible `QuizNow/` folder or the hidden `.obsidian/quiznow/` folder),
+> backup files and legacy Markdown question files are **automatically migrated to
+> `quiznow/` at your vault root**, and the old folders are cleaned up (other user files
+> are never deleted).
 
 ---
 
-##  数据备份与恢复
+##  Backup & Restore
 
-在「设置 → 数据备份」中：
+In "Settings → Data Backup":
 
-- **立即备份**：把题库、考试记录、SM-2 记忆进度与全部设置导出为一个
-  `quiznow-backup-时间戳.json` 文件（默认存放于库根目录下的 `quiznow/backups/`）；
-- **恢复**：从备份列表中任选一份恢复（**恢复前会自动先备份当前数据**，防止误操作丢失）；
-- 备份文件可随时复制到其它设备，恢复后完整还原插件状态。
-
----
-
-##  AI 生成（可选）
-
-在「设置」中填写 OpenAI 兼容接口（如 OpenAI / DeepSeek / 通义千问 / 本地 Ollama 等）：
-
-- **API 地址**：`https://api.openai.com/v1`（或其兼容地址）
-- **API 密钥**、**模型**、**每次生成数量**
-- 勾选「启用 AI 生成试题与解释」后：
-  - 「基于当前笔记生成试题」将调用 AI 出题（失败自动回退内置生成）；
-  - 「薄弱点」的「生成解释」将调用 AI 通俗讲解。
-
-**自定义生成指令**：在「设置 → 自定义生成指令」中可新增 / 删除多条自定义
-AI 指令（prompt），并选择当前使用哪一条；不选择时使用内置的多语言系统默认指令。
-指令文本中可使用 `{count}`（生成数量）与 `{types}`（启用的题型）两个占位符。
-
-> 未配置 AI 时，插件使用**零成本的内置启发式生成**：
-> 加粗术语 → 填空/单选，键值对 → 填空。
+- **Back Up Now**: export the question bank, exam records, SM-2 memory progress and
+  all settings into a single `quiznow-backup-<timestamp>.json` file
+  (stored in `quiznow/backups/` at your vault root by default);
+- **Restore**: pick any backup from the list (**a backup of current data is created
+  automatically before restoring**, so nothing is lost accidentally);
+- Backup files can be copied to other devices and fully restore the plugin state.
 
 ---
 
-##  多语言支持
+##  AI Generation (Optional)
 
-在「设置 → 界面语言」中选择 **简体中文 / English / 日本語 / 한국어**，
-保存后整个插件界面（含命令名、提示、通知、AI 默认指令）即切换语言。
+Fill in an OpenAI-compatible endpoint in Settings (OpenAI, DeepSeek, Qwen, local Ollama, etc.):
 
----
+- **API URL**: `https://api.openai.com/v1` (or any compatible endpoint)
+- **API Key**, **Model**, **Questions per AI run**
+- With "Enable AI question & explanation generation" checked:
+  - "Generate questions from current note" uses AI (falls back to built-in on failure);
+  - "Generate Explanation" in Weak Spots uses AI for plain-language explanations.
 
-## ❓ 常见问题（FAQ）
+**Custom generation prompts**: in "Settings → Custom Generation Prompts" you can
+add / delete multiple custom AI prompts and pick the active one; when none is
+selected, the built-in multilingual default prompt is used. Prompts support two
+placeholders: `{count}` (number of questions) and `{types}` (enabled question types).
 
-**Q：为什么题库是一个 JSON 文件，而不是很多 Markdown 文件？**
-A：单文件数据库避免每次生成产生大量细碎文件，且随库同步、备份、迁移都更简单；
-功能上（生成 → 加入题库 → 抽题 → 复习）与旧版完全一致。
-
-**Q：升级后我原来的题目还在吗？**
-A：在。旧版的题库数据库（包括 `QuizNow/` 可见目录与 `.obsidian/quiznow/` 隐藏目录下的）、备份文件与 Markdown 题目文件夹会在升级时**自动迁移到库根目录 `quiznow/`**，并清理旧目录。
-
-**Q：没有 AI 密钥可以使用吗？**
-A：可以。未配置 AI 时使用内置的启发式生成（加粗术语 → 填空/单选，键值对 → 填空），
-并可从笔记自动提取薄弱点的上下文解释。
-
-**Q：如何把数据搬到另一台电脑？**
-A：在旧设备「设置 → 数据备份 → 立即备份」，把生成的备份 JSON 文件复制到新设备，
-在新设备安装插件后「设置 → 数据备份 → 恢复」即可。
-
-**Q：数据保存在哪里？卸载插件会丢失吗？**
-A：数据保存在插件 `data.json` 与题库数据库文件（默认为库根目录下的
-`quiznow/questions.json`）里；**卸载插件不会删除这些文件**，重新安装后自动读取。
+> Without AI configured, the plugin uses the **zero-cost built-in heuristic generator**:
+> bold terms → fill-in-the-blank / single-choice, `key: value` lines → fill-in-the-blank.
 
 ---
 
-## 🛠 开发
+##  Language Support
+
+Choose **简体中文 / English / 日本語 / 한국어** in "Settings → Language".
+After saving, the entire UI — including command names, notices and AI default
+prompts — switches language.
+
+---
+
+## ❓ FAQ
+
+**Q: Why is the bank a single JSON file instead of many Markdown files?**
+A: A single-file database avoids cluttering your vault with tiny files every time
+you generate questions, and is simpler to sync, back up and migrate. Functionally
+it is identical to the old folder-based bank.
+
+**Q: Will I lose my old questions after upgrading?**
+A: No. The bank database (including copies under the old `QuizNow/` folder and in the
+hidden `.obsidian/quiznow/` folder), backup files and Markdown question folders are
+migrated automatically to `quiznow/` at your vault root, and the old folders are
+cleaned up.
+
+**Q: Can I use the plugin without an AI key?**
+A: Yes. Without AI, the built-in heuristic generator is used (bold terms → fill /
+single-choice, key-value lines → fill), and explanations are extracted from your notes.
+
+**Q: How do I move my data to another device?**
+A: On the old device: Settings → Data Backup → Back Up Now. Copy the backup JSON to
+the new device, install the plugin there, then Settings → Data Backup → Restore.
+
+**Q: Where is the data stored? Will uninstalling the plugin delete it?**
+A: Data lives in the plugin's `data.json` and the bank database file (`quiznow/questions.json`
+at your vault root by default). **Uninstalling the plugin does not delete
+these files** — they are re-read automatically after reinstallation.
+
+---
+
+## 🛠 Development
 
 ```bash
 npm install
-npm run dev        # 监听模式，输出 main.js
-npm run build      # 类型检查 + 生产构建
-npm run lint       # 运行 Obsidian 官方社区插件审核规则集（提交前自检）
+npm run dev        # watch mode, outputs main.js
+npm run build      # type-check + production build
+npm run lint       # runs Obsidian's official community-plugin review ruleset
 ```
 
-### 发布新版本
+### Releasing
 
-Obsidian 要求 **GitHub Release 的 tag 与 `manifest.json` 的 `version` 完全一致**，
-且 Release 需附带 `main.js`、`manifest.json`、`styles.css` 三个文件。
-本仓库已配置 GitHub Actions（push tag 时自动构建并发布）：
+Obsidian requires the **GitHub release tag to be identical to `version` in
+`manifest.json`**, with `main.js`, `manifest.json` and `styles.css` attached as
+release assets. This repo ships a GitHub Actions workflow that does this on tag push:
 
 ```bash
-npm version minor      # 自动同步 manifest.json 与 versions.json，并提交 + 打 tag
-git push --follow-tags # 触发 .github/workflows/release.yml 生成 Release
+npm version minor      # syncs manifest.json + versions.json, commits and tags
+git push --follow-tags # triggers .github/workflows/release.yml
 ```
 
-> `versions.json` 记录每个插件版本所需的 `minAppVersion`，供 Obsidian 在用户
-> 客户端版本较低时回退到兼容的旧版本。
+> `versions.json` records the `minAppVersion` required by each plugin version, so
+> Obsidian can fall back to a compatible older release on older app versions.
 
-| 模块 | 说明 |
+| Module | Description |
 | --- | --- |
-| `src/main.ts` | 插件入口：命令、Ribbon、标题栏按钮、视图注册 |
-| `src/store.ts` | 数据持久化、题库数据库（单文件 JSON）、备份/恢复 |
-| `src/types.ts` | 数据模型与设置项 |
-| `src/question.ts` | 题目格式解析 / 序列化 / 答案判定 |
-| `src/generator.ts` | 内置启发式出题与解释提取 |
-| `src/ai.ts` | OpenAI 兼容 AI 客户端 |
-| `src/sm2.ts` | SM-2 间隔复习算法 |
-| `src/i18n.ts` | 中 / 英 / 日 / 韩四语言国际化 |
-| `src/views/` | 首页 / 考试 / 复习 / 薄弱点 / 设置五个视图 |
+| `src/main.ts` | Plugin entry: commands, ribbon, title-bar button, view registration |
+| `src/store.ts` | Persistence, single-file JSON bank database, backup/restore |
+| `src/types.ts` | Data models & settings |
+| `src/question.ts` | Question parsing / serialization / answer grading |
+| `src/generator.ts` | Built-in heuristic generation & explanation extraction |
+| `src/ai.ts` | OpenAI-compatible AI client |
+| `src/sm2.ts` | SM-2 spaced-repetition algorithm |
+| `src/i18n.ts` | Internationalization (zh / en / ja / ko) |
+| `src/views/` | Home / Exam / Review / Weak Spots / Settings views |
 
 ---
 
-##  数据与隐私
+##  Data & Privacy
 
-- 所有数据**仅保存在本地库内**（插件 `data.json` + 题库数据库文件，
-  默认位于库根目录的 `quiznow/`），不上传任何服务器；
-- **文件读取说明**：插件会读取库内所有 Markdown 文件的**文件名**（用于把
-  「薄弱点」解释与题目的来源笔记关联起来），但**文件内容**只在你主动执行
-  「从当前笔记生成试题」「生成解释」等操作时才读取；
-- AI 功能仅在**你主动点击生成**时才将当前笔记内容发送到你配置的 API 地址；
-- 请自行评估所配置的第三方 AI 服务的数据使用政策。
+- All data stays **local to your vault** (plugin `data.json` + bank database file in
+  `quiznow/` at your vault root); nothing is uploaded anywhere;
+- **File access transparency**: the plugin lists the **filenames** of all Markdown
+  files in the vault (to link weak-spot explanations back to their source notes).
+  **File contents** are only read when you explicitly run actions such as
+  "Generate questions from current note" or "Generate Explanation";
+- AI features only send the current note's content to your configured API endpoint
+  **when you explicitly click generate**;
+- Please review the data policies of whichever third-party AI service you configure.
 
 ---
 
-##  许可证
+##  License
 
 [MIT](LICENSE) © Luziboo
 
@@ -290,6 +297,6 @@ git push --follow-tags # 触发 .github/workflows/release.yml 生成 Release
 
 <div align="center">
 
-**QuizNow** — 让 Obsidian 成为你的私人考场 📝
+**QuizNow** — turn Obsidian into your personal exam room 📝
 
 </div>
