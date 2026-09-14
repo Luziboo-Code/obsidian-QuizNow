@@ -19,7 +19,7 @@
 
 -  Built with vanilla DOM — no runtime frameworks, extremely low resource usage
 -  UI in **简体中文 / English / 日本語 / 한국어** (switchable in Settings)
--  Question bank stored in a **single-file JSON database** — no more scattered files, with one-click **backup/restore**
+-  All data (bank, papers, scores, backups) lives in one visible **`QuizNow/` folder** at your vault root — nothing is written to `.obsidian` anymore, so the folder can be moved as a whole, with one-click **backup/restore**
 
 ---
 
@@ -30,7 +30,7 @@
 - [Usage Guide](#-usage-guide)
 - [Commands](#-commands)
 - [Question Types & Answering](#-question-types--answering)
-- [Question Bank (Single-File Database)](#-question-bank-single-file-database)
+- [Data Storage (the QuizNow folder)](#-data-storage-the-quiznow-folder)
 - [Backup & Restore](#-backup--restore)
 - [AI Generation (Optional)](#-ai-generation-optional)
 - [Language Support](#-language-support)
@@ -45,16 +45,17 @@
 
 | Section | Description |
 | --- | --- |
-|  **Home** | Row 1: stat cards for question count / wrong answers / due reviews / exam papers; Row 2: **best score** card for each exam paper (number shown configurable) |
+|  **Home** | Row 1: stat cards for question count / wrong answers / due reviews / exam papers; Row 2: **best score** card for each exam paper (number shown configurable) — click a card to inspect every question and answer, or **retake the paper in one click** |
 |  **Exam** | Flashcard-style answering; single-choice & true-false **submit on click**, multiple-choice & fill-in-the-blank submit manually; configurable question count and types; after generation choose **"Answer Now"** or **"Add to Bank"**; wrong answers are auto-saved to the bank and review queue |
 |  **Review** | Wrong answers from exams collected automatically; re-answer with the **SM-2 spaced repetition** algorithm (self-rate: Again / Hard / Good / Easy); **answering wrong again moves the question to Weak Spots** |
 |  **Weak Spots** | Knowledge points you keep missing, managed in one place; one-click **explanation generation** (AI or extracted from your note) to help memorization; SM-2-based re-exams; consecutive correct answers graduate the point automatically |
-|  **Settings** | Bank database path, default question count, scoring mode, question types, papers shown on home, SM-2 parameters, weak-spot mastery threshold, AI endpoint, **custom generation prompts**, **UI language**, **backup/restore** and more |
+|  **Settings** | Now part of **Obsidian's own settings panel** (`Settings → Community plugins → QuizNow`): bank database path, data folder, default question count, scoring mode, question types, papers shown on home, SM-2 parameters, weak-spot mastery threshold, AI endpoint, **custom generation prompts**, **UI language**, **backup/restore** and more |
 
 **Highlights**
 
 -  **One-click generation from the document header** — open any note and click the 📋 button in the top-right corner of its title bar
--  **Single-file database at your vault root** — all questions live in `quiznow/questions.json` (configurable), synced with your vault and easy to back up
+-  **One data folder** — bank, papers, scores, progress and backups all live in `QuizNow/`, easy to sync and to migrate as a whole
+-  **Retake any paper** — reuse the exact same questions (same order, reshuffled options); scores add to that paper's best result
 -  **One-click backup/restore** — export everything (bank + records + memory progress + settings) to a single JSON file
 -  **Optional AI enhancement** — plug in any OpenAI-compatible API for AI question generation and explanations; built-in zero-cost generation when not configured
 -  **Custom generation prompts** — manage multiple AI prompts and switch between them anytime
@@ -65,12 +66,15 @@
 ##  Quick Start
 
 1. **Install**: copy `main.js`, `manifest.json`, `styles.css` into
-   `<your-vault>/.obsidian/plugins/obsidian-quiznow/` (create it if missing);
+   `<your-vault>/.obsidian/plugins/obsidian-QuizNow/` (create it if missing);
 2. **Enable**: Obsidian "Settings → Community plugins" → enable **QuizNow**;
 3. **Open**: click the 🎓 icon in the left ribbon, or run the command
-   `QuizNow: Open QuizNow panel` (opens in a **new tab in the main content area**, not the sidebar).
+   `QuizNow: Open QuizNow panel` (opens in a **new tab in the main content area**, not the sidebar);
+4. **Configure**: plugin settings now live in Obsidian's settings panel
+   (`Settings → Community plugins → QuizNow`); the ⚙ button on the right of the main
+   panel's nav bar jumps straight there.
 
-> On first launch a sample bank database is created (`quiznow/questions.json` at
+> On first launch a sample bank database is created (`QuizNow/questions.json` at
 > your vault root by default). Browse questions via the Home stat cards.
 
 ---
@@ -85,7 +89,7 @@
    `QuizNow: Generate questions from current note`;
 3. A "Generating exam questions…" notice appears; when done, a preview dialog shows:
    - **Answer Now** → start the exam immediately;
-   - **Add to Bank** → all questions are written to the bank database `quiznow/questions.json` (vault root by default).
+   - **Add to Bank** → all questions are written to the bank database `QuizNow/questions.json` (vault root by default).
 
 ### 2. Take an Exam
 
@@ -96,7 +100,17 @@
 - After the last question you see your score and a review of mistakes —
   **wrong answers are automatically added to the bank and the review queue**.
 
-### 3. Review (SM-2 spaced repetition)
+### 3. Retake a Paper
+
+- Clicking a **best-score card** on the Home tab opens that paper's exam records, where you
+  can inspect **every question, your answer and whether it was right**;
+- Click the **🔁 Retake** button on the card (or on any record) to take the same paper again:
+  **identical questions in the same order, with the options reshuffled** so you can't memorize positions;
+- The new attempt is stored as its own record and counts towards that paper's **best score**
+  (a better score is never overwritten);
+- The score page shown right after finishing an exam also offers a **🔁 Retake This Paper** button.
+
+### 4. Review (SM-2 spaced repetition)
 
 - The **Review** tab lists **due** wrong answers as flashcards: recall first,
   click the card to flip and reveal the answer;
@@ -104,7 +118,7 @@
   next review with the SM-2 algorithm;
 - **Answering wrong again moves the question to Weak Spots**.
 
-### 4. Master Your Weak Spots
+### 5. Master Your Weak Spots
 
 - Open the **Weak Spots** tab and click **✨ Generate Explanation** on any point to
   aid understanding and memorization;
@@ -135,13 +149,24 @@
 
 ---
 
-##  Question Bank (Single-File Database · Vault Root)
+##  Data Storage (the QuizNow folder)
 
-The bank is stored in **one JSON database file** (`quiznow/questions.json` at your
-vault root by default; path configurable in Settings). All questions live in a single
-file — no scattered files.
+**All** data lives in one visible folder at your vault root, which makes migration,
+syncing and backup trivial. The plugin **no longer writes any configuration to `.obsidian`**:
 
-Database structure:
+```
+QuizNow/
+├── questions.json     question bank database (all questions, single JSON file)
+├── data.json          global settings + SM-2 memory progress + review/weak-spot queues + mistake notes
+├── papers/            one snapshot per exam attempt (questions, your answers, correctness, score)
+│   └── 20260910-121751 题库 · 09-10 13_04 <id>.json
+└── backups/           one-click backup files (QuizNow-backup-<timestamp>.json)
+```
+
+> The "Data folder" row in the settings panel shows the current path; the button next to it
+> opens the folder in your system file manager.
+
+Bank database structure (`QuizNow/questions.json`):
 
 ```json
 {
@@ -161,30 +186,35 @@ Database structure:
 }
 ```
 
-> **Upgrading**: when upgrading from an older version, the bank database (including
-> copies in the visible `QuizNow/` folder or the hidden `.obsidian/quiznow/` folder),
-> backup files and legacy Markdown question files are **automatically migrated to
-> `quiznow/` at your vault root**, and the old folders are cleaned up (other user files
-> are never deleted).
+> **Upgrading**: older versions kept data under `.obsidian/quiznow/` (and the plugin's own
+> `data.json` in the hidden config folder). On first launch after the upgrade the bank,
+> exam records, review progress, mistake notes and all settings are **migrated into the
+> `QuizNow/` folder**: legacy questions found in the hidden folder are **merged** into the
+> new bank (deduplicated by question id) before those files are removed, and a lowercase
+> `quiznow/` folder at the vault root is renamed to `QuizNow/`.
 
 ---
 
 ##  Backup & Restore
 
-In "Settings → Data Backup":
+In **Obsidian settings → Community plugins → QuizNow → Data Backup**:
 
 - **Back Up Now**: export the question bank, exam records, SM-2 memory progress and
-  all settings into a single `quiznow-backup-<timestamp>.json` file
-  (stored in `quiznow/backups/` at your vault root by default);
+  all settings into a single `QuizNow-backup-<timestamp>.json` file
+  (stored in `QuizNow/backups/` by default);
 - **Restore**: pick any backup from the list (**a backup of current data is created
   automatically before restoring**, so nothing is lost accidentally);
 - Backup files can be copied to other devices and fully restore the plugin state.
+
+> Since everything lives in `QuizNow/`, copying that one folder to another vault or device
+> also migrates the plugin completely.
 
 ---
 
 ##  AI Generation (Optional)
 
-Fill in an OpenAI-compatible endpoint in Settings (OpenAI, DeepSeek, Qwen, local Ollama, etc.):
+Fill in an OpenAI-compatible endpoint in `Settings → Community plugins → QuizNow → AI Generation`
+(OpenAI, DeepSeek, Qwen, local Ollama, etc.):
 
 - **API URL**: `https://api.openai.com/v1` (or any compatible endpoint)
 - **API Key**, **Model**, **Questions per AI run**
@@ -192,8 +222,8 @@ Fill in an OpenAI-compatible endpoint in Settings (OpenAI, DeepSeek, Qwen, local
   - "Generate questions from current note" uses AI (falls back to built-in on failure);
   - "Generate Explanation" in Weak Spots uses AI for plain-language explanations.
 
-**Custom generation prompts**: in "Settings → Custom Generation Prompts" you can
-add / delete multiple custom AI prompts and pick the active one; when none is
+**Custom generation prompts**: in `Settings → Community plugins → QuizNow → Custom Generation Prompts`
+you can add / delete multiple custom AI prompts and pick the active one; when none is
 selected, the built-in multilingual default prompt is used. Prompts support two
 placeholders: `{count}` (number of questions) and `{types}` (enabled question types).
 
@@ -204,9 +234,9 @@ placeholders: `{count}` (number of questions) and `{types}` (enabled question ty
 
 ##  Language Support
 
-Choose **简体中文 / English / 日本語 / 한국어** in "Settings → Language".
-After saving, the entire UI — including command names, notices and AI default
-prompts — switches language.
+Choose **简体中文 / English / 日本語 / 한국어** in
+`Settings → Community plugins → QuizNow → General → Language`.
+The entire UI — including command names, notices and AI default prompts — switches immediately.
 
 ---
 
@@ -218,23 +248,34 @@ you generate questions, and is simpler to sync, back up and migrate. Functionall
 it is identical to the old folder-based bank.
 
 **Q: Will I lose my old questions after upgrading?**
-A: No. The bank database (including copies under the old `QuizNow/` folder and in the
-hidden `.obsidian/quiznow/` folder), backup files and Markdown question folders are
-migrated automatically to `quiznow/` at your vault root, and the old folders are
-cleaned up.
+A: No. The old bank database (both the hidden `.obsidian/quiznow/` copy and any visible
+folder), exam records, review progress, mistake notes and every setting are **migrated
+automatically into the `QuizNow/` folder** at your vault root. Legacy questions in the
+hidden folder are merged into the new bank (deduplicated by id) before the old files are removed.
+
+**Q: Where did the Settings tab go?**
+A: It moved into Obsidian's own settings panel: `Settings → Community plugins → QuizNow`.
+The ⚙ button at the right of the main panel's nav bar takes you there. All changes are
+saved automatically and apply immediately.
+
+**Q: How do I retake a paper I already took?**
+A: Home → best-score card → open the exam records → click **🔁 Retake** (or use
+"Retake This Paper" on the score page). The retake uses the original questions in the
+original order with reshuffled options, and the score counts towards that paper's best result.
 
 **Q: Can I use the plugin without an AI key?**
 A: Yes. Without AI, the built-in heuristic generator is used (bold terms → fill /
 single-choice, key-value lines → fill), and explanations are extracted from your notes.
 
 **Q: How do I move my data to another device?**
-A: On the old device: Settings → Data Backup → Back Up Now. Copy the backup JSON to
-the new device, install the plugin there, then Settings → Data Backup → Restore.
+A: Either copy the whole `QuizNow/` folder from the vault root, or use
+`Settings → Community plugins → QuizNow → Data Backup → Back Up Now`, copy the backup
+JSON to the new device and restore it there.
 
 **Q: Where is the data stored? Will uninstalling the plugin delete it?**
-A: Data lives in the plugin's `data.json` and the bank database file (`quiznow/questions.json`
-at your vault root by default). **Uninstalling the plugin does not delete
-these files** — they are re-read automatically after reinstallation.
+A: Everything lives in the vault-root `QuizNow/` folder (`questions.json` + `data.json` +
+`papers/` + `backups/`); nothing is written to `.obsidian`. **Uninstalling the plugin does
+not delete these files** — they are re-read automatically after reinstallation.
 
 ---
 
@@ -263,22 +304,25 @@ git push --follow-tags # triggers .github/workflows/release.yml
 
 | Module | Description |
 | --- | --- |
-| `src/main.ts` | Plugin entry: commands, ribbon, title-bar button, view registration |
-| `src/store.ts` | Persistence, single-file JSON bank database, backup/restore |
+| `src/main.ts` | Plugin entry: commands, ribbon, title-bar button, view & settings-tab registration |
+| `src/store.ts` | Persistence: the `QuizNow/` data folder, bank database, paper snapshots, backup/restore and legacy migration |
+| `src/settings-tab.ts` | QuizNow settings page inside Obsidian's settings panel |
 | `src/types.ts` | Data models & settings |
-| `src/question.ts` | Question parsing / serialization / answer grading |
+| `src/question.ts` | Question parsing / serialization / answer grading / option shuffling |
+| `src/retake.ts` | Retaking a past paper (reuses its questions, reshuffles options) |
 | `src/generator.ts` | Built-in heuristic generation & explanation extraction |
 | `src/ai.ts` | OpenAI-compatible AI client |
 | `src/sm2.ts` | SM-2 spaced-repetition algorithm |
 | `src/i18n.ts` | Internationalization (zh / en / ja / ko) |
-| `src/views/` | Home / Exam / Review / Weak Spots / Settings views |
+| `src/views/` | Home / Exam / Review / Weak Spots views (Settings moved to Obsidian's settings panel) |
 
 ---
 
 ##  Data & Privacy
 
-- All data stays **local to your vault** (plugin `data.json` + bank database file in
-  `quiznow/` at your vault root); nothing is uploaded anywhere;
+- All data stays **local to your vault** (the `QuizNow/` folder: `questions.json`,
+  `data.json`, `papers/`, `backups/`); nothing is uploaded anywhere, and nothing is
+  written to `.obsidian`;
 - **File access transparency**: the plugin lists the **filenames** of all Markdown
   files in the vault (to link weak-spot explanations back to their source notes).
   **File contents** are only read when you explicitly run actions such as

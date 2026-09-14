@@ -1,6 +1,7 @@
 import {
 	MarkdownView,
 	Notice,
+	Platform,
 	Plugin,
 	setIcon,
 	type TAbstractFile,
@@ -13,9 +14,10 @@ import { generateFromNote } from "./generator";
 import { aiGenerateQuestions, defaultGeneratePrompt } from "./ai";
 import { QuizStore } from "./store";
 import { GenerationModal, GenerationConfigModal } from "./generate-modal";
-import { QuizNowView, VIEW_TYPE } from "./views/main";
+import { QuizNowView, LEGACY_VIEW_TYPES, VIEW_TYPE } from "./views/main";
+import { QuizNowSettingTab } from "./settings-tab";
 import { t, getLang } from "./i18n";
-import { el } from "./ui";
+import { el, copyText } from "./ui";
 
 /** 插件命令 id（Obsidian 会自动加上插件前缀，无需包含插件名） */
 const COMMAND_IDS = ["open-panel", "quick-exam", "generate-from-note"] as const;
@@ -37,6 +39,20 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 		await this.store.load();
 
 		this.registerView(VIEW_TYPE, (leaf) => new QuizNowView(leaf, this));
+		this.addSettingTab(new QuizNowSettingTab(this.app, this));
+
+		// 清掉旧版视图类型（quiznow-view）遗留的空标签页
+		this.app.workspace.onLayoutReady(() => {
+			for (const legacy of LEGACY_VIEW_TYPES) {
+				try {
+					for (const leaf of this.app.workspace.getLeavesOfType(legacy)) {
+						leaf.detach();
+					}
+				} catch {
+					// 忽略
+				}
+			}
+		});
 
 		this.addRibbonIcon("graduation-cap", t("ribbon.main"), () => {
 			this.openTab("home");
@@ -155,6 +171,56 @@ export default class QuizNowPlugin extends Plugin implements QuizNowApi {
 
 	openTab(tab: TabName): void {
 		void this.activateView(tab);
+	}
+
+	/** 打开 Obsidian 设置面板中的 QuizNow 设置页（未公开 API，做兼容处理） */
+	openSettings(): void {
+		const setting = (
+			this.app as unknown as {
+				setting?: { open(): void; openTabById(id: string): void };
+			}
+		).setting;
+		if (!setting) {
+			new Notice(t("notice.settingsUnavailable"));
+			return;
+		}
+		setting.open();
+		setting.openTabById(this.manifest.id);
+	}
+
+	/** 在系统文件管理器中打开 QuizNow 数据文件夹（失败时复制路径） */
+	openDataFolder(): void {
+		const path = this.store.folderPath();
+		const adapter = this.app.vault.adapter as unknown as {
+			getFullPath?: (p: string) => string;
+		};
+		let full: string | null = null;
+		try {
+			if (typeof adapter.getFullPath === "function") {
+				full = adapter.getFullPath(path);
+			}
+		} catch {
+			full = null;
+		}
+		if (Platform.isDesktopApp && full) {
+			try {
+				const req = (window as unknown as { require?: (id: string) => unknown })
+					.require;
+				const electron =
+					typeof req === "function"
+						? (req("electron") as {
+								shell?: { openPath(p: string): Promise<string> };
+						  })
+						: null;
+				if (electron?.shell?.openPath) {
+					void electron.shell.openPath(full);
+					return;
+				}
+			} catch {
+				// 退回复制路径
+			}
+		}		copyText(full ?? path);
+		new Notice(t("notice.pathCopied", { path: full ?? path }));
 	}
 
 	startSession(session: ExamSession): void {

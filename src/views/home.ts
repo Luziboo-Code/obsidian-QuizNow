@@ -1,6 +1,6 @@
 import { setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
-import { el, clear, btn, emptyState } from "../ui";
+import { el, clear, btn, iconBtn, emptyState } from "../ui";
 import { t } from "../i18n";
 import {
 	ExamHistoryModal,
@@ -8,26 +8,19 @@ import {
 	questionStatus,
 	type QuestionListItem,
 } from "../list-modal";
-import type { Question } from "../types";
+import { canRetake, startRetake } from "../retake";
+import type { ExamRecord, Question } from "../types";
 
-/** 组装考试记录视图数据（可按试卷名过滤） */
-function buildRecords(plugin: QuizNowApi, nameFilter?: string) {
-	const questions = plugin.store.data.questions;
+/** 组装考试记录视图数据（可按试卷名过滤，按时间倒序） */
+function buildRecords(plugin: QuizNowApi, nameFilter?: string): ExamRecord[] {
 	return plugin.store.data.examRecords
 		.filter((r) => !nameFilter || r.name === nameFilter)
-		.sort((a, b) => b.date - a.date)
-		.map((r) => ({
-			id: r.id,
-			name: r.name,
-			date: r.date,
-			score: r.score,
-			correct: r.correct,
-			total: r.total,
-			wrongQuestions: r.wrongIds
-				.map((id) => questions.find((q) => q.id === id))
-				.filter((q): q is Question => !!q),
-			snapshot: r.snapshot ?? [],
-		}));
+		.sort((a, b) => b.date - a.date);
+}
+
+/** 某份试卷最近一次考试记录（用于首页卡片的「重考」） */
+function latestRecord(plugin: QuizNowApi, name: string): ExamRecord | undefined {
+	return buildRecords(plugin, name)[0];
 }
 
 /** 首页：统计 + 各试卷最高分卡片 */
@@ -90,8 +83,7 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 			onClick: () => {
 				new ExamHistoryModal(plugin.app, plugin, buildRecords(plugin)).open();
 			},
-		},
-	];
+		},	];
 
 	for (const item of stats) {
 		const card = el("div", "qn-stat clickable");
@@ -146,6 +138,21 @@ export function renderHome(container: HTMLElement, plugin: QuizNowApi): void {
 				)
 			);
 			card.appendChild(info);
+			// 重考：直接以最近一次同卷的题目重新开考（选项重新打乱）
+			const last = latestRecord(plugin, p.name);
+			if (last && canRetake(last)) {
+				const again = iconBtn(
+					"rotate-ccw",
+					t("exam.retake"),
+					(e?: MouseEvent) => {
+						// 阻止冒泡，避免同时触发卡片的「查看记录」点击
+						e?.stopPropagation();
+						startRetake(plugin, last);
+					},
+					"qn-btn-sm qn-retake-btn"
+				);
+				card.appendChild(again);
+			}
 			// 点击分数卡：查看该试卷的考试记录（含完整题目与逐题作答）
 			card.addEventListener("click", () => {
 				new ExamHistoryModal(plugin.app, plugin, buildRecords(plugin, p.name)).open();

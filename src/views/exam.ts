@@ -528,15 +528,22 @@ function renderSummary(
 	}
 
 	const row = el("div", "qn-btn-row");
+	// 重考本卷：题目与顺序不变，选项重新打乱
 	row.appendChild(
-		btn("qn-btn-primary", t("exam.again"), () => {
-			plugin.currentSession = null;
-			plugin.showSummary = false;
-			plugin.refresh();
+		btn("qn-btn-primary", t("exam.retakeThis"), () => {
+			plugin.startSession({
+				id: newId(),
+				name: rec.name,
+				questions: session.questions.map((q) => shuffleOptions(q)),
+				index: 0,
+				answers: {},
+				origin: "paper",
+				createdAt: Date.now(),
+			});
 		})
 	);
 	row.appendChild(
-		btn("", t("exam.backConfig"), () => {
+		btn("", t("exam.again"), () => {
 			plugin.currentSession = null;
 			plugin.showSummary = false;
 			plugin.refresh();

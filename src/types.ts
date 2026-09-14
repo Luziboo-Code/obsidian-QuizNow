@@ -59,6 +59,8 @@ export interface ExamRecord {
 	wrongIds: string[];
 	/** 本次试卷的完整题目快照（含每题作答结果），旧记录可能缺失 */
 	snapshot?: ExamQuestionSnapshot[];
+	/** 该记录对应的试卷文件（QuizNow/papers/xxx.json，相对库根目录） */
+	file?: string;
 }
 
 /** 一次进行中的考试会话（内存态，不持久化） */
@@ -68,8 +70,8 @@ export interface ExamSession {
 	questions: Question[];
 	index: number;
 	answers: Record<string, ExamAnswer>;
-	/** 来源标记 */
-	origin: "bank" | "note" | "weak" | "review";
+	/** 来源标记（paper = 历史试卷重考） */
+	origin: "bank" | "note" | "weak" | "review" | "paper";
 	createdAt: number;
 }
 
@@ -148,7 +150,7 @@ export function isAiConfigured(
 export interface Settings {
 	/** 界面语言 */
 	language: Lang;
-	/** 题库数据库文件（JSON，相对库根目录） */
+	/** 题库数据库文件（JSON，相对库根目录，默认 QuizNow/questions.json） */
 	bankFile: string;
 	/** 旧版题库文件夹（仅用于一次性迁移旧数据，不再使用） */
 	bankFolder?: string;
@@ -192,7 +194,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
 	language: "zh",
-	// 空 = 使用运行时默认（vaults 根目录下的 quiznow/questions.json）
+	// 空 = 使用运行时默认（库根目录下的 QuizNow/questions.json）
 	bankFile: "",
 	bankFolder: "QuizNow/题库",
 	genMode: "dialog",
@@ -226,11 +228,11 @@ export interface PluginData {
 	version: number;
 	/** 全局设置 */
 	settings: Settings;
-	/** 题库（由题库文件夹同步而来，运行时镜像） */
+	/** 题库（由题库数据库文件载入，运行时镜像） */
 	questions: Question[];
-	/** 题目 id -> 题库文件路径（相对库根） */
+	/** 题目 id -> 题库文件路径（相对库根，历史字段，已不再使用） */
 	questionFiles: Record<string, string>;
-	/** 考试记录 */
+	/** 考试记录（由 QuizNow/papers/*.json 载入，运行时镜像） */
 	examRecords: ExamRecord[];
 	/** 各试卷的最高分 name -> score */
 	paperBest: Record<string, number>;
@@ -244,11 +246,15 @@ export interface PluginData {
 	notes: Record<string, string>;
 	/** 是否已初始化过示例题库 */
 	seeded?: boolean;
+	/** 是否已清理 .obsidian 下的旧数据（避免重复迁移） */
+	legacyCleaned?: boolean;
+	/** 是否已修正 QuizNow 目录名大小写 */
+	folderCaseFixed?: boolean;
 }
 
 export function emptyData(): PluginData {
 	return {
-		version: 1,
+		version: 2,
 		settings: { ...DEFAULT_SETTINGS },
 		questions: [],
 		questionFiles: {},

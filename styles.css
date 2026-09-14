@@ -1,6 +1,7 @@
 /* ===== QuizNow 快速考试与复习 - 现代风格样式 ===== */
 
-.qn-view {
+.qn-view,
+.qn-settings {
 	--qn-accent: #6366f1;
 	--qn-accent-2: #8b5cf6;
 	--qn-accent-3: #06b6d4;
@@ -12,6 +13,9 @@
 	--qn-success: #10b981;
 	--qn-danger: #ef4444;
 	--qn-warn: #f59e0b;
+}
+
+.qn-view {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -20,7 +24,15 @@
 	color: var(--text-normal);
 }
 
-body.theme-dark .qn-view {
+/* 设置面板（Obsidian 设置 → 第三方插件 → QuizNow） */
+.qn-settings {
+	font-size: 13.5px;
+	color: var(--text-normal);
+	padding-bottom: 32px;
+}
+
+body.theme-dark .qn-view,
+body.theme-dark .qn-settings {
 	--qn-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.35);
 	--qn-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.5);
 }
@@ -1166,4 +1178,83 @@ body.is-mobile .qn-paper-card {
 		font-size: 12px;
 		gap: 4px;
 	}
+}
+
+/* ===== 设置面板（Obsidian 设置 → 第三方插件 → QuizNow） ===== */
+
+/* 导航栏右侧的设置入口按钮（设置已迁到 Obsidian 设置面板） */
+.qn-nav-gear {
+	flex: 0 0 auto;
+	min-width: 38px;
+	max-width: 44px;
+	color: var(--text-muted);
+}
+
+.qn-nav-gear:hover {
+	color: var(--text-normal);
+}
+
+/* 设置面板内的自定义区块（列表、按钮组等） */
+.qn-settings .qn-settings-block {
+	margin: 8px 0 16px;
+}
+
+.qn-settings .qn-settings-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.qn-settings .qn-settings-list .qn-item {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--qn-radius-sm);
+	padding: 10px 12px;
+}
+
+.qn-settings .qn-settings-add {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 10px 12px;
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: var(--qn-radius-sm);
+}
+
+.qn-settings .qn-settings-add label {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.qn-settings .qn-input,
+.qn-settings .qn-textarea {
+	width: 100%;
+}
+
+.qn-settings .qn-subtitle {
+	margin-top: 10px;
+}
+
+.qn-settings .qn-note {
+	margin: 4px 0 8px;
+}
+
+.qn-settings .qn-autosave-status {
+	margin: -4px 0 12px;
+}
+
+.qn-settings .qn-title {
+	margin-top: 0;
+}
+
+/* 设置面板中的测试连接状态 */
+.qn-settings .qn-ai-test {
+	min-height: 16px;
+}
+
+/* 首页试卷卡片上的重考按钮 */
+.qn-paper-card .qn-retake-btn {
+	flex: 0 0 auto;
+	align-self: center;
 }

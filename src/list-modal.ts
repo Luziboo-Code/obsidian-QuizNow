@@ -1,8 +1,9 @@
 import { Modal, Notice, setIcon, type App } from "obsidian";
 import type { QuizNowApi } from "./plugin-api";
-import type { ExamQuestionSnapshot, Question } from "./types";
+import type { ExamQuestionSnapshot, ExamRecord, Question } from "./types";
 import { answerText, displayContent, userAnswerText } from "./question";
 import { isDue } from "./sm2";
+import { canRetake, startRetake } from "./retake";
 import { el, btn, badge, iconBtn, confirmDialog } from "./ui";
 import { t } from "./i18n";
 
@@ -116,37 +117,20 @@ export class QuestionListModal extends Modal {
 	}
 }
 
-/** 考试记录详情弹窗（首页「考试试卷」统计卡点击后查看，支持删除单条记录） */
+/** 考试记录详情弹窗（首页「考试试卷」统计卡点击后查看，支持重考与删除单条记录） */
 export class ExamHistoryModal extends Modal {
 	private plugin: QuizNowApi;
-	private records: {
-		id: string;
-		name: string;
-		date: number;
-		score: number;
-		correct: number;
-		total: number;
-		wrongQuestions: Question[];
-		snapshot: ExamQuestionSnapshot[];
-	}[];
+	private records: ExamRecord[];
+	/** 该弹窗是否只展示某一份试卷（用于标题与重考按钮文案） */
+	private paperName?: string;
 
-	constructor(
-		app: App,
-		plugin: QuizNowApi,
-		records: {
-			id: string;
-			name: string;
-			date: number;
-			score: number;
-			correct: number;
-			total: number;
-			wrongQuestions: Question[];
-			snapshot: ExamQuestionSnapshot[];
-		}[]
-	) {
+	constructor(app: App, plugin: QuizNowApi, records: ExamRecord[]) {
 		super(app);
 		this.plugin = plugin;
-		this.records = records;
+		this.records = [...records].sort((a, b) => b.date - a.date);
+		if (this.records.length > 0 && this.records.every((r) => r.name === records[0].name)) {
+			this.paperName = records[0].name;
+		}
 	}
 
 	onOpen(): void {
@@ -164,28 +148,61 @@ export class ExamHistoryModal extends Modal {
 		const head = el("div", "qn-title");
 		setIcon(head, "history");
 		head.appendChild(
-			el("span", "", `${t("exam.historyTitle")}（${this.records.length}）`)
+			el(
+				"span",
+				"",
+				this.paperName
+					? `${this.paperName}（${this.records.length}）`
+					: `${t("exam.historyTitle")}（${this.records.length}）`
+			)
 		);
 		wrap.appendChild(head);
 
 		if (this.records.length === 0) {
 			wrap.appendChild(el("div", "qn-note", t("modal.emptyRecords")));
 		} else {
+			// 最近一次考试：提供整卷重考入口
+			const latest = this.records[0];
+			if (canRetake(latest)) {
+				const topRow = el("div", "qn-btn-row");
+				topRow.appendChild(
+					btn("qn-btn-primary qn-btn-block", t("exam.retake"), () => {
+						if (startRetake(this.plugin, latest)) this.close();
+					})
+				);
+				wrap.appendChild(topRow);
+				wrap.appendChild(el("div", "qn-note", t("exam.retakeHint")));
+			}
+
 			const list = el("div", "qn-scroll-list");
 			for (const r of this.records) {
 				const card = el("div", "qn-item");
 				const topRow = el("div", "qn-flex-between");
 				const nameWrap = el("div", "qn-flex");
 				nameWrap.appendChild(el("div", "qn-paper-name", r.name));
-				const delBtn = iconBtn(
-					"trash-2",
-					t("modal.delete"),
-					() => {
-						this.deleteRecord(r);
-					},
-					"qn-btn-danger qn-btn-sm"
+				// 重考：使用原卷题目（选项重新打乱）
+				if (canRetake(r)) {
+					nameWrap.appendChild(
+						iconBtn(
+							"rotate-ccw",
+							t("exam.retake"),
+							() => {
+								if (startRetake(this.plugin, r)) this.close();
+							},
+							"qn-btn-sm"
+						)
+					);
+				}
+				nameWrap.appendChild(
+					iconBtn(
+						"trash-2",
+						t("modal.delete"),
+						() => {
+							this.deleteRecord(r);
+						},
+						"qn-btn-danger qn-btn-sm"
+					)
 				);
-				nameWrap.appendChild(delBtn);
 				topRow.appendChild(nameWrap);
 				const score = el("span", "qn-paper-score qn-score-md", `${r.score}`);
 				topRow.appendChild(score);
@@ -203,19 +220,22 @@ export class ExamHistoryModal extends Modal {
 					)
 				);
 				// 完整试卷内容（题目快照）：每道题标注答对/答错与你的答案
+				const wrongQuestions = r.wrongIds
+					.map((id) => this.plugin.store.data.questions.find((q) => q.id === id))
+					.filter((q): q is Question => !!q);
 				if (r.snapshot && r.snapshot.length > 0) {
 					const paperList = el("div", "");
 					r.snapshot.forEach((s, i) => {
 						paperList.appendChild(renderSnapshotItem(s, i));
 					});
 					card.appendChild(paperList);
-				} else if (r.wrongQuestions.length > 0) {
+				} else if (wrongQuestions.length > 0) {
 					// 旧记录无快照：降级显示错题列表
 					card.appendChild(
-						el("div", "qn-note", t("exam.wrongList", { n: r.wrongQuestions.length }))
+						el("div", "qn-note", t("exam.wrongList", { n: wrongQuestions.length }))
 					);
 					const wrongList = el("div", "");
-					for (const q of r.wrongQuestions) {
+					for (const q of wrongQuestions) {
 						const item = el("div", "qn-gen-item");
 						const h = el("div", "qn-question-head");
 						h.appendChild(badge(q.type));
@@ -241,7 +261,7 @@ export class ExamHistoryModal extends Modal {
 		);
 	}
 
-	private deleteRecord(r: { id: string; name: string }): void {
+	private deleteRecord(r: ExamRecord): void {
 		confirmDialog(this.app, t("modal.deleteRecordConfirm"), () => {
 			void (async () => {
 				try {
