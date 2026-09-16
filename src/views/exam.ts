@@ -1,7 +1,7 @@
 import { Notice, setIcon } from "obsidian";
 import type { QuizNowApi } from "../plugin-api";
 import type { ExamRecord, ExamSession, Question, QuestionType } from "../types";
-import { checkAnswer, answerText, userAnswerText, newId, displayContent, shuffleOptions, cleanOption } from "../question";
+import { checkAnswer, answerText, userAnswerText, newId, countBlanks, displayContent, shuffleOptions, cleanOption } from "../question";
 import { el, clear, btn, badge, field, progressBar, emptyState } from "../ui";
 import { t } from "../i18n";
 
@@ -309,7 +309,11 @@ function buildAnswerControl(
 		case "fill": {
 			const input = el("input", "qn-input");
 			input.type = "text";
-			input.placeholder = t("exam.fillPlaceholder");
+			const blanks = countBlanks(q.content);
+			input.placeholder =
+				blanks >= 2
+					? t("exam.fillPlaceholderMulti", { n: blanks })
+					: t("exam.fillPlaceholder");
 			// 手机端键盘回车键提示（"完成"）
 			input.enterKeyHint = "done";
 			input.addEventListener("input", () => {

@@ -14,7 +14,7 @@ Rules:
 - Questions must be strictly based on the note; do not make things up;
 - Single choice has 4 options; multiple choice has 4 options with at least 2 correct;
 - True/False answer is ["T"] or ["F"];
-- Fill-in-the-blank uses ____ in the stem and the answer is a list of acceptable answers;
+- Fill-in-the-blank uses ____ in the stem and the answer is a list of acceptable answers; for multiple blanks, give exactly one answer per blank, in order (e.g. ["A","B"]);
 - Each question includes a concise explanation (parse / source).
 Output strictly as JSON:
 {"questions":[{"type":"single|multiple|fill|judge","content":"stem","options":["A","B","C","D"],"answer":["A"]or["A","C"]or["answer"]or["T"],"explanation":"..."}]}`;
@@ -25,7 +25,7 @@ Output strictly as JSON:
 - 問題はノート内容に厳密に基づくこと。勝手に作り上げないこと；
 - 単一選択は選択肢 4 つ、複数選択は選択肢 4 つで正解は 2 つ以上；
 - 正誤問題の answer は ["T"] または ["F"]；
-- 穴埋め問題は文面に ____ を使い、answer は受け入れ可能な答えのリスト；
+- 穴埋め問題は文面に ____ を使い、answer は受け入れ可能な答えのリスト。複数の空がある場合は、空の順に各空ごとに1つの答えを（例：["A","B"]）；
 - 各問題に簡潔な explanation（解説・出典）を付けること。
 JSON で厳密に出力：
 {"questions":[{"type":"single|multiple|fill|judge","content":"問題文","options":["A","B","C","D"],"answer":["A"]または["A","C"]または["答え"]または["T"],"explanation":"解説"}]}`;
@@ -36,7 +36,7 @@ JSON で厳密に出力：
 - 문제는 노트 내용에 엄격히 기반해야 하며 지어내지 마세요;
 - 단일 선택은 4개 보기, 다중 선택은 4개 보기 중 정답 2개 이상;
 - 참/거짓 문제의 answer는 ["T"] 또는 ["F"];
-- 빈칸 문제는 지문에 ____을 사용하고 answer는 허용 가능한 답 목록;
+- 빈칸 문제는 지문에 ____을 사용하고 answer는 허용 가능한 답 목록. 여러 개의 빈칸이 있으면 빈칸 순서대로 각 빈칸에 하나의 답을 (예: ["A","B"]);
 - 각 문제에 간결한 explanation(해설/출처)을 포함하세요.
 JSON으로 엄격히 출력:
 {"questions":[{"type":"single|multiple|fill|judge","content":"지문","options":["A","B","C","D"],"answer":["A"]또는["A","C"]또는["답"]또는["T"],"explanation":"해설"}]}`;
@@ -48,7 +48,7 @@ JSON으로 엄격히 출력:
 - 禁止生成如"根据原文"、"根据上下文"等需要根据原文内容来推测的题目；
 - 单选题有 4 个选项，多选有 4 个选项且至少 2 个正确；
 - 判断题 answer 为 ["T"] 或 ["F"]；
-- 填空题在题干中用 ____ 表示空，answer 为可接受答案列表；
+- 填空题在题干中用 ____ 表示空，answer 为可接受答案列表；若一道题有多个空，按空的顺序每个空给出一个答案（如 ["A","B"]）；
 - 每题附带简洁的中文 explanation（解析/出处）。
 请严格以 JSON 输出，格式为：
 {"questions":[{"type":"single|multiple|fill|judge","content":"题干","options":["A选项","B选项","C选项","D选项"],"answer":["A"]或["A","C"]或["答案"]或["T"],"explanation":"解析"}]}`;

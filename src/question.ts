@@ -175,6 +175,46 @@ function normFill(s: string): string {
 	return s.trim().toLowerCase().replace(/\s+/g, "");
 }
 
+/** 统计题干中的空位数量（连续下划线，如 ____） */
+export function countBlanks(content: string): number {
+	const m = content.match(/_{2,}/g);
+	return m ? m.length : 0;
+}
+
+/** 按显式分隔符拆分用户填写的多空答案（/ ／ 、 , ， | ; ；），保留各段内部空白 */
+function splitFillParts(s: string): string[] {
+	return s
+		.split(/[/／、,，|;；]+/)
+		.map((p) => p.trim())
+		.filter(Boolean);
+}
+
+/** 多空填空：把用户输入按顺序拆成各空的答案并逐一比对（支持 "A / B"、"A/B"、"A、B"、"A, B"、"A B" 等写法） */
+function matchMultiBlank(q: Question, raw: string): boolean {
+	const n = countBlanks(q.content);
+	if (n < 2 || q.answer.length !== n) return false;
+	// 先按显式分隔符拆（答案本身含空格时更稳），再尝试把空白也当作分隔符
+	const candidates: string[][] = [
+		splitFillParts(raw),
+		raw
+			.split(/[\s/／、,，|;；]+/)
+			.map((p) => p.trim())
+			.filter(Boolean),
+	];
+	for (const parts of candidates) {
+		if (parts.length !== n) continue;
+		let ok = true;
+		for (let i = 0; i < n; i++) {
+			if (normFill(parts[i]) !== normFill(q.answer[i])) {
+				ok = false;
+				break;
+			}
+		}
+		if (ok) return true;
+	}
+	return false;
+}
+
 /** 归一化判断题用户答案 */
 function normJudge(s: string): "T" | "F" | null {
 	const v = s.trim().toUpperCase();
@@ -201,10 +241,17 @@ export function checkAnswer(q: Question, userAnswer: string[]): boolean {
 			return true;
 		}
 		case "fill": {
-			const input = userAnswer.map(normFill).filter(Boolean);
-			if (input.length === 0) return false;
-			const inputStr = input.join("");
-			return q.answer.some((a) => normFill(a) === inputStr);
+			const raw = userAnswer.map((s) => s || "").join("");
+			if (!raw.trim()) return false;
+			// 多空题（题干空位数与答案数一致）：按顺序逐空比对，
+			// 只填了其中一个空的答案不算对
+			const n = countBlanks(q.content);
+			if (n >= 2 && q.answer.length === n) {
+				return matchMultiBlank(q, raw);
+			}
+			// 单空题（含多个可接受答案）或空位数与答案数不一致：整串精确匹配
+			const whole = normFill(raw);
+			return q.answer.some((a) => normFill(a) === whole);
 		}
 		case "judge": {
 			const v = normJudge(userAnswer.join(""));
